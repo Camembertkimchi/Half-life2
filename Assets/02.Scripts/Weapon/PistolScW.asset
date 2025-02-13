@@ -12,8 +12,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 59b9b091d5b491840adef81572f62280, type: 3}
   m_Name: PistolScW
   m_EditorClassIdentifier: 
-  WeaponName: 
-  damage: 0
+  WeaponName: Pistol
+  damage: 12
   fireRate: 0
   maxAmmo: 0
+  weaponLoadOut: 1
+  weaponType: 1
+  ammoType: 0
   bullet: {fileID: 0}

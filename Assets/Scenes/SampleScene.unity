@@ -730,8 +730,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 963194225}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0.964, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1125,7 +1125,7 @@ Rigidbody:
   m_UseGravity: 1
   m_IsKinematic: 0
   m_Interpolate: 0
-  m_Constraints: 4
+  m_Constraints: 80
   m_CollisionDetection: 0
 --- !u!136 &2007623416
 CapsuleCollider:
@@ -1231,8 +1231,14 @@ MonoBehaviour:
   mouseSensativity: 0.5
   hp: 100
   armor: 100
-  speed: 10
-  jumpPower: 0
+  speed: 20
+  jumpPower: 5
+  pistolAmmo: 0
+  arAmmo: 0
+  sgAmmo: 0
+  grande: 0
+  rpgAmmo: 0
+  magnumAmmo: 0
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
