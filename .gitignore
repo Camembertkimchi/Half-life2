@@ -1,0 +1,40 @@
+# Unity 기본 제외 파일들
+Library/
+Temp/
+Obj/
+Logs/
+UserSettings/
+Build/
+Builds/
+MemoryCaptures/
+
+# OS에서 생성하는 파일
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# IDE 및 개인 설정 파일
+.vscode/
+.idea/
+*.sln*
+*.csproj*
+*.userprefs
+*.pidb
+*.suo
+*.tmp
+*.user
+*.booproj
+*.svd
+
+# Unity 빌드 결과물 제외
+*.apk
+*.aab
+*.exe
+*.app
+*.xcodeproj
+*.ipa
+*.dll
+*.pdb
+
+# Unity Cloud 관련 파일들
+[Cc]ollaborate[Asse]*.asset
