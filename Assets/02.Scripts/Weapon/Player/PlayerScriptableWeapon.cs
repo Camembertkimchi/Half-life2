@@ -1,9 +1,9 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+[CreateAssetMenu(fileName = "PlayerWeaponObject", menuName = "PlayerWeapon/New Weapon")]
 
-[CreateAssetMenu(fileName = "WeaponObject", menuName = "Weapon/New Weapon")]
-public class ScriptableWeapon : ScriptableObject
+public class PlayerScriptableWeapon : ScriptableObject
 {
     public enum WeaponType { Melee = 0, SemiAuto, FullAuto }
     public enum WeaponLoadOut { Defalut = 0, Pistol, FullAuto, SGSR, Explosive }
@@ -18,10 +18,4 @@ public class ScriptableWeapon : ScriptableObject
     public AmmoType ammoType;
 
 
-    public GameObject bullet;
-}
-
-public interface IWeapon
-{
-    abstract void Attack();
 }

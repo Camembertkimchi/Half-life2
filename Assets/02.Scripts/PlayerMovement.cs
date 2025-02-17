@@ -1,14 +1,17 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class PlayerMovement : MonoBehaviour
 {
     [SerializeField] float mouseSensativity;
-    [SerializeField] int hp;
+    [SerializeField] int maxHp;
+    [SerializeField] int currentHp;
     [SerializeField] int armor;
     [SerializeField] float speed;
     [SerializeField] float jumpPower;
+    [SerializeField] bool dead = false;
 
     Rigidbody rigid;
     CapsuleCollider bodyCol;
@@ -16,13 +19,17 @@ public class PlayerMovement : MonoBehaviour
     Transform camTr;
     float verticalRot;
 
-    [SerializeField]List<IWeapon> weapon = new List<IWeapon>();
+    [SerializeField]List<ScriptableWeapon> weapon = new List<ScriptableWeapon>();
+    GameObject currentWeapon;
     [SerializeField]int pistolAmmo;
     [SerializeField]int arAmmo;
     [SerializeField]int sgAmmo;
     [SerializeField]int grande;
     [SerializeField]int rpgAmmo;
     [SerializeField]int magnumAmmo;
+
+
+    [SerializeField] Canvas playerUI;
 
 
 
@@ -42,7 +49,7 @@ public class PlayerMovement : MonoBehaviour
         Move();
         LookAround();
         Jump();
-
+       
        
 
         
@@ -87,6 +94,38 @@ public class PlayerMovement : MonoBehaviour
     void Crouch()
     {
         if(Input.GetKeyDown(KeyCode.LeftControl))
+        {
+
+        }
+    }
+
+    void Attack1()
+    {
+        if(weapon != null)
+        {
+            
+        }
+    }
+
+
+    public void ChangeHp(int damage)
+    {
+
+        currentHp += damage;
+        if(currentHp <= 0)
+        {
+            dead = true;
+            Dead();
+        }
+        if(currentHp > maxHp)
+        {
+            currentHp = maxHp;
+        }
+    }
+
+    public void Dead()
+    {
+        if(dead == true)
         {
 
         }

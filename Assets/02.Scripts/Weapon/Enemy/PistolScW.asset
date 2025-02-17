@@ -19,4 +19,4 @@ MonoBehaviour:
   weaponLoadOut: 1
   weaponType: 1
   ammoType: 0
-  bullet: {fileID: 0}
+  bullet: {fileID: 1400371940245250933, guid: 3853386c2ef82d3439dd8c4030c0bad3, type: 3}

@@ -8,6 +8,8 @@ TagManager:
   - Dummie
   - SecondCamera
   - BulletSpawn
+  - Enemy
+  - DestroyableObj
   layers:
   - Default
   - TransparentFX
@@ -17,8 +19,8 @@ TagManager:
   - UI
   - Player
   - Enemy
-  - 
-  - 
+  - Head
+  - Body
   - 
   - 
   - 
