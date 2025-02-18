@@ -3,24 +3,27 @@ using System.Collections.Generic;
 using UnityEngine;
 
 [CreateAssetMenu(fileName = "EnemyWeaponObject", menuName = "EnemyWeapon/New Weapon")]
-public abstract class ScriptableWeapon : ScriptableObject
+
+
+public class ScriptableWeapon : ScriptableObject
 {
-    public enum Weapons 
-    {   
-        Pistol = 0,
-        SMG,
-        AR2,
-        Shotgun 
-    }
-
-
-    public string WeaponName;
     public int damage;
     public float fireRate;
-    public int maxAmmo;
-
+    public int oneCyleFireAmmo;//공격 주기당 발사할 총알
+    public Weapons weapon;
 
     public GameObject bullet;
+    public BulletCon bulletScript;
+
+    
+  
+}
+public enum Weapons
+{
+    Pistol = 0,
+    SMG,
+    AR2,
+    Shotgun
 }
 
 
