@@ -15,7 +15,10 @@ public class ScriptableWeapon : ScriptableObject
     public GameObject bullet;
     public BulletCon bulletScript;
 
-    
+    public void SetBullet(GameObject prefab)
+    {
+        bullet = prefab;
+    }  
   
 }
 public enum Weapons

@@ -16,5 +16,5 @@ MonoBehaviour:
   fireRate: 0.08
   oneCyleFireAmmo: 6
   weapon: 2
-  bullet: {fileID: 1400371940245250933, guid: 3853386c2ef82d3439dd8c4030c0bad3, type: 3}
-  bulletScript: {fileID: 0}
+  bullet: {fileID: 0}
+  bulletScript: {fileID: 2088675446932631669, guid: 3853386c2ef82d3439dd8c4030c0bad3, type: 3}

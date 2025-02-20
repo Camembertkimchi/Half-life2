@@ -12,7 +12,7 @@ public class EnemyWeapon : MonoBehaviour, IEnemyWeapon
     static readonly WaitForSeconds weaponDelay = new WaitForSeconds(1f);
     [SerializeField] int maxFireTimes;//한 주기 당 발사하는 총알 갯수
     Weapons type;
-
+    [SerializeField] BulletPooling pool;
 
 
     Weapons IEnemyWeapon.Type 
@@ -24,46 +24,55 @@ public class EnemyWeapon : MonoBehaviour, IEnemyWeapon
     private void OnEnable()
     {
         enemyAI = GetComponentInParent<EnemyAI>();
+        weaponInfo = Instantiate(weaponInfo); // 복사본 안쓰면 골 때리게도 총알을 못가져옴,,,
+        weaponInfo.SetBullet(pool.bulletPrefab);
         weaponInfo.bulletScript = weaponInfo.bullet.GetComponent<BulletCon>();
 
         weaponInfo.bulletScript.Damage = weaponInfo.damage;
         maxFireTimes = weaponInfo.oneCyleFireAmmo;
         fireTimes = maxFireTimes;
         type = weaponInfo.weapon;
-
+        
         
     }
 
     public void FireWeapon()
     {
         StartCoroutine(Fire());
-        Debug.Log("함수 불렀음");
+
     }
 
     public IEnumerator Fire()
     {
-        Debug.Log("조건 따지러옴");
+
         while(enemyAI != null && enemyAI.AliveState == true && enemyAI.AttackTime > 0)
         {
-            Debug.Log("합격");
+
             while(fireTimes > 0)
             {
                 if(type == Weapons.Shotgun)
                 {
                     for(int i = 0; i < 12;  i++)
                     {
-                        Instantiate(weaponInfo.bullet, muzzlePos.position, muzzlePos.rotation);
+                        weaponInfo.bullet = pool.GetBullet();
+                        weaponInfo.bullet.transform.position = muzzlePos.position;
+                        weaponInfo.bullet.transform.rotation = muzzlePos.rotation;
+                        weaponInfo.bulletScript = weaponInfo.bullet.GetComponent<BulletCon>();
+                        weaponInfo.bulletScript.Initialize(pool);
                     }
                 }
                 else
                 {
-                    Instantiate(weaponInfo.bullet, muzzlePos.position, muzzlePos.rotation);
+                    weaponInfo.bullet = pool.GetBullet();
+                    weaponInfo.bullet.transform.position = muzzlePos.position;
+                    weaponInfo.bullet.transform.rotation = muzzlePos.rotation;
+                    weaponInfo.bulletScript.Initialize(pool);
+
                 }
                 
                 fireTimes--;
-                Debug.Log(fireTimes);
                 yield return new WaitForSeconds(weaponInfo.fireRate);
-                Debug.Log("한 주기 끝");
+
             }
 
             fireTimes = maxFireTimes;

@@ -90,14 +90,14 @@ public class EnemyAI : MonoBehaviour
 
 
 
-    //private void Update()//For Test
-    //{
-    //    if (Input.GetKeyDown(KeyCode.I))
-    //    {
-    //        currentWeapon.FireWeapon();
-    //        Debug.Log("πﬂªÁ«ÿ∫Ω");
-    //    }
-    //}
+    private void Update()//For Test
+    {
+        if (Input.GetKeyDown(KeyCode.I))
+        {
+            currentWeapon.FireWeapon();
+            Debug.Log("πﬂªÁ«ÿ∫Ω");
+        }
+    }
 
 
 
