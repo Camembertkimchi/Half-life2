@@ -45,6 +45,7 @@ public class BulletPooling : MonoBehaviour
     {
         Debug.Log("È¸¼ö ¿Ï");
         bulletPool.Release(bullet);
+       
     }
 
 }

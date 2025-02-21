@@ -19,6 +19,8 @@ public class EnemyWeapon : MonoBehaviour, IEnemyWeapon
     { 
         get { return type; } 
         set { type = value; } 
+
+        //기능 구현 => 에셋 => 
     }
 
     private void OnEnable()
@@ -58,6 +60,10 @@ public class EnemyWeapon : MonoBehaviour, IEnemyWeapon
                         weaponInfo.bullet.transform.position = muzzlePos.position;
                         weaponInfo.bullet.transform.rotation = muzzlePos.rotation;
                         weaponInfo.bulletScript = weaponInfo.bullet.GetComponent<BulletCon>();
+                        if (weaponInfo.bulletScript.Damage != weaponInfo.damage)
+                        {
+                            weaponInfo.bulletScript.Damage = weaponInfo.damage;
+                        }
                         weaponInfo.bulletScript.Initialize(pool);
                     }
                 }
@@ -66,6 +72,11 @@ public class EnemyWeapon : MonoBehaviour, IEnemyWeapon
                     weaponInfo.bullet = pool.GetBullet();
                     weaponInfo.bullet.transform.position = muzzlePos.position;
                     weaponInfo.bullet.transform.rotation = muzzlePos.rotation;
+                    weaponInfo.bulletScript = weaponInfo.bullet.GetComponent<BulletCon>();
+                    if (weaponInfo.bulletScript.Damage != weaponInfo.damage)
+                    {
+                        weaponInfo.bulletScript.Damage = weaponInfo.damage;
+                    }
                     weaponInfo.bulletScript.Initialize(pool);
 
                 }

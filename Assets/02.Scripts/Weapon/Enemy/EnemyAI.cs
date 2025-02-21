@@ -13,11 +13,11 @@ public interface IEnemyWeapon
      
 }
 
-public interface IEnmeyState
+public interface IEnemyState
 {
     void EnterState(EnemyAI enemy);
-    void ExitState(EnemyAI enemy);
-    void UpdateState(EnemyAI enemy);
+    void ExitState();
+    void UpdateState();
 
 }
 
@@ -31,10 +31,17 @@ public class EnemyAI : MonoBehaviour
     [SerializeField]static readonly WaitForSeconds reloadDelay = new WaitForSeconds(3f);
     [SerializeField] int maxAttackTime = 5;
     [SerializeField] int currentAttackTime;
-    bool nowReloading = false;
-    bool nowHiding = false;
-    bool alive = true;
+    public bool NowReloading
+    {
+        get; set;
+    }
+    public bool NowHiding
+    {
+        get; set;
+    }
 
+    bool alive = true;
+    IEnemyState state;
 
 
     [SerializeField] int smgFireTimes = 2;
@@ -88,6 +95,15 @@ public class EnemyAI : MonoBehaviour
         }
     }
 
+    void ChangeState(IEnemyState status)
+    {
+        state?.ExitState();
+        state = status;
+        state.UpdateState();
+    }
+
+
+
 
 
     private void Update()//For Test
@@ -110,11 +126,11 @@ public class EnemyAI : MonoBehaviour
     IEnumerator Reloading()
     {
         StartCoroutine("Hiding");
-        yield return new WaitUntil(() => nowHiding == false);
+        yield return new WaitUntil(() => NowHiding == false);
         //애니메이션 재생
         yield return reloadDelay;
         currentAttackTime = maxAttackTime;
-        nowReloading = false; //장전 완료!
+        NowReloading = false; //장전 완료!
     }
 
 
@@ -129,10 +145,10 @@ public class EnemyAI : MonoBehaviour
     {
         //아무튼 숨는 로직
         //Player가 시야에 없다 + 앞이 벽이다 = 숨었다! else 벽이 주변에 없다!
-        nowHiding = false;
+        NowHiding = false;
 
         
-        yield return new WaitUntil(() => nowReloading == false);
+        yield return new WaitUntil(() => NowReloading == false);
         //움직여!
     }
 

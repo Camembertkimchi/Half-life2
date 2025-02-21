@@ -5,7 +5,7 @@ using UnityEngine;
 public class BulletCon : MonoBehaviour
 {
     [SerializeField] float bulletSpeed = 20f;
-    int damage;
+    [SerializeField]int damage;
     BulletPooling bulletPool;
     [SerializeField]bool isReleased = false;
     static readonly WaitForSeconds bulletReleaseTime = new WaitForSeconds(2f);
@@ -30,14 +30,18 @@ public class BulletCon : MonoBehaviour
         {
             bulletPool.ReleaseBullet(this.gameObject);
         }
+
+        
     }
+
+    
 
     public void Initialize(BulletPooling pool)
     {
         bulletPool = pool;
-        Debug.Log(bulletPool.ToString());
-        if (isReleased)
+        if (!isReleased)
         {
+            Debug.Log("응 처음부터 true임~");
             return;
         }
         isReleased = true;
@@ -62,17 +66,20 @@ public class BulletCon : MonoBehaviour
         bulletPool.ReleaseBullet(gameObject);
     }
 
+    private void OnEnable()
+    {
+        if(!isReleased) isReleased = true;
+    }
+
+
     void OnDisable()
     {
         
-        if (!isReleased) // 중복 방지용
-        {
-            Debug.Log($"OnDisable에서 isReleased = true 처리됨: {gameObject.name}");
-            isReleased = true;
-        }
+       
         Debug.Log("응애 나 꺼졌엉");
-        if(currentCor != null)
+        if(currentCor != null || isReleased)
         {
+            isReleased = false;
             StopCoroutine(currentCor);
             currentCor = null;
         }
