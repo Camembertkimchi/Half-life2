@@ -16,7 +16,6 @@ public interface IEnemyWeapon
     Weapons Type { get; set; }
      
 }
-
 public interface IEnemyState
 {
     void EnterState(EnemyAI enemy);
@@ -56,7 +55,7 @@ public class EnemyAI : MonoBehaviour
     [SerializeField] List<Collider> targetList = new List<Collider>();
     Quaternion targetRotation;
     [SerializeField]float rotationSpeed;
-
+    [SerializeField] bool foundPlayer;
     #endregion
 
 
@@ -221,7 +220,15 @@ public class EnemyAI : MonoBehaviour
             Debug.DrawRay(transform.position, lookDir * viewRadius, Color.cyan);
         }
 
-        targetList.Clear();
+        //if (targetList != null && foundPlayer == true)
+        //{
+        //    transform.position = targetList[0].transform.position;
+        //}
+        //else
+        //{
+            targetList.Clear();
+        //}
+        
 
         foreach (Collider target in targets)
         {
@@ -234,11 +241,16 @@ public class EnemyAI : MonoBehaviour
                 if (!Physics.Raycast(transform.position, targetDir, viewRadius, ObstacleMask))
                 {
                     targetList.Add(target);
+                    foundPlayer = true;
                     Debug.Log("타겟 추가 확인");
                     if (debugingNow) Debug.DrawLine(transform.position, target.transform.position, Color.red);
                 }
             }
+           
         }
+       
+
+
     }
     Vector3 AngleToDir(float angle)
     {
@@ -251,7 +263,7 @@ public class EnemyAI : MonoBehaviour
         Vector3 direction = (player.position - transform.position).normalized;
         direction.y = 0; // 고개 숙이는 걸 방지 (회전은 수평 방향만)
 
-        Quaternion targetRotation = Quaternion.LookRotation(direction);
+        targetRotation = Quaternion.LookRotation(direction);
         transform.rotation = Quaternion.Lerp(transform.rotation, targetRotation, Time.deltaTime * rotationSpeed);
     }
 

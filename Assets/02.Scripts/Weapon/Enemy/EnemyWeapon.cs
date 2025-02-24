@@ -13,8 +13,8 @@ public class EnemyWeapon : MonoBehaviour, IEnemyWeapon
     [SerializeField] int maxFireTimes;//한 주기 당 발사하는 총알 갯수
     Weapons type;
     [SerializeField] BulletPooling pool;
-
-
+    float accuracy;
+    Vector3 randomSpread;
     Weapons IEnemyWeapon.Type 
     { 
         get { return type; } 
@@ -36,6 +36,9 @@ public class EnemyWeapon : MonoBehaviour, IEnemyWeapon
         type = weaponInfo.weapon;
         
         
+        accuracy = weaponInfo.accuracy;
+        Debug.Log(accuracy);
+
     }
 
     public void FireWeapon()
@@ -56,9 +59,15 @@ public class EnemyWeapon : MonoBehaviour, IEnemyWeapon
                 {
                     for(int i = 0; i < 12;  i++)
                     {
+                        randomSpread.x = Random.Range(-accuracy * 0.5f, accuracy * 0.5f);
+                        randomSpread.y = Random.Range((-accuracy + 0.5f) * 0.2f, (accuracy - 0.5f) * 0.2f);
+
+                        
+
                         weaponInfo.bullet = pool.GetBullet();
                         weaponInfo.bullet.transform.position = muzzlePos.position;
-                        weaponInfo.bullet.transform.rotation = muzzlePos.rotation;
+                        weaponInfo.bullet.transform.rotation = Quaternion.LookRotation(muzzlePos.forward + randomSpread);
+                        Debug.Log(randomSpread);
                         weaponInfo.bulletScript = weaponInfo.bullet.GetComponent<BulletCon>();
                         if (weaponInfo.bulletScript.Damage != weaponInfo.damage)
                         {
@@ -69,9 +78,13 @@ public class EnemyWeapon : MonoBehaviour, IEnemyWeapon
                 }
                 else
                 {
+                    randomSpread.x = Random.Range(-accuracy * 0.5f, accuracy * 0.5f);
+                    randomSpread.y = Random.Range((-accuracy + 0.5f) * 0.2f, (accuracy - 0.5f) * 0.2f);
+
+
                     weaponInfo.bullet = pool.GetBullet();
                     weaponInfo.bullet.transform.position = muzzlePos.position;
-                    weaponInfo.bullet.transform.rotation = muzzlePos.rotation;
+                    weaponInfo.bullet.transform.rotation = Quaternion.LookRotation(muzzlePos.forward + randomSpread);
                     weaponInfo.bulletScript = weaponInfo.bullet.GetComponent<BulletCon>();
                     if (weaponInfo.bulletScript.Damage != weaponInfo.damage)
                     {

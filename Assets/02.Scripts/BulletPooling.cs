@@ -28,7 +28,7 @@ public class BulletPooling : MonoBehaviour
         //actionOnDestory: Action<T>. 삭제될 때 실행
         bulletPool = new ObjectPool<GameObject>
             (
-            createFunc: () => Instantiate(bulletPrefab),
+            createFunc: () => Instantiate(bulletPrefab, transform),
             actionOnGet: bullet => bullet.SetActive(true),
             actionOnRelease: bullet => bullet.SetActive(false),
             actionOnDestroy: bullet => Destroy(bullet),

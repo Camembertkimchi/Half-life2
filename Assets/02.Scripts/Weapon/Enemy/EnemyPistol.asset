@@ -14,7 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   damage: 6
   fireRate: 0.18
-  oneCyleFireAmmo: 3
+  oneCyleFireAmmo: 6
   weapon: 0
+  accuracy: 0.15
   bullet: {fileID: 1400371940245250933, guid: 3853386c2ef82d3439dd8c4030c0bad3, type: 3}
   bulletScript: {fileID: 2088675446932631669, guid: 3853386c2ef82d3439dd8c4030c0bad3, type: 3}
