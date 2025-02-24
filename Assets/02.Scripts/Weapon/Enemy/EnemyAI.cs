@@ -2,9 +2,13 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using Unity.VisualScripting;
+using UnityEditor.Experimental.GraphView;
+using UnityEditor.Rendering.LookDev;
 using UnityEngine;
 using UnityEngine.AI;
 using static ScriptableWeapon;
+using static UnityEditor.PlayerSettings;
+using static UnityEngine.GraphicsBuffer;
 
 public interface IEnemyWeapon
 {
@@ -28,7 +32,7 @@ public class EnemyAI : MonoBehaviour
     
     [SerializeField] int hp;
     NavMeshAgent agent;
-    [SerializeField]static readonly WaitForSeconds reloadDelay = new WaitForSeconds(3f);
+    [SerializeField]static readonly WaitForSeconds reloadDelay = new WaitForSeconds(2f);
     [SerializeField] int maxAttackTime = 5;
     [SerializeField] int currentAttackTime;
     public bool NowReloading
@@ -42,6 +46,19 @@ public class EnemyAI : MonoBehaviour
 
     bool alive = true;
     IEnemyState state;
+
+    #region 시야각
+    [Range(0f,360f)] [SerializeField] float viewAngle; //보는 각도
+    [SerializeField] float viewRadius; //보는 길이
+    [SerializeField] LayerMask targetMask; //플레이어
+    [SerializeField] LayerMask ObstacleMask; //장애물 레이어
+    [SerializeField] bool debugingNow;
+    [SerializeField] List<Collider> targetList = new List<Collider>();
+    Quaternion targetRotation;
+    [SerializeField]float rotationSpeed;
+
+    #endregion
+
 
 
     [SerializeField] int smgFireTimes = 2;
@@ -82,6 +99,8 @@ public class EnemyAI : MonoBehaviour
                 case Weapons.Shotgun: maxAttackTime = shotgunFireTimes; break;
                 case Weapons.SMG: maxAttackTime = smgFireTimes; break;
                 case Weapons.AR2: maxAttackTime = arFireTimes; break;
+                default: Debug.Log("무기 없음");
+                    maxAttackTime = 0; break;
             }
 
             currentAttackTime = maxAttackTime;
@@ -95,17 +114,6 @@ public class EnemyAI : MonoBehaviour
         }
     }
 
-    void ChangeState(IEnemyState status)
-    {
-        state?.ExitState();
-        state = status;
-        state.UpdateState();
-    }
-
-
-
-
-
     private void Update()//For Test
     {
         if (Input.GetKeyDown(KeyCode.I))
@@ -113,8 +121,29 @@ public class EnemyAI : MonoBehaviour
             currentWeapon.FireWeapon();
             Debug.Log("발사해봄");
         }
+
+        state?.UpdateState();
+        Viewing();
+        if (targetList.Count > 0)
+        {
+            LookAtPlayer(targetList[0].transform); // 감지된 플레이어 바라보기
+        }
+
     }
 
+
+
+
+
+
+
+
+    void ChangeState(IEnemyState status)
+    {
+        state?.ExitState();
+        state = status;
+        state.UpdateState();
+    }
 
 
     // 숨고 -> 장전 -> 움직이기
@@ -152,17 +181,83 @@ public class EnemyAI : MonoBehaviour
         //움직여!
     }
 
-    
-    
-    
-    
-    
-    
-    
-    
-    
 
-    
+
+    void OnDrawGizmos()
+    {
+        if (debugingNow)
+        {
+            Vector3 pos = transform.position + Vector3.up * 0.5f;
+            Gizmos.color = Color.yellow;
+            Gizmos.DrawWireSphere(pos, viewRadius);
+        }
+    }
+
+
+
+    void Viewing()
+    {
+      
+
+        //OverlapSphere 결과가 없으면 바로 반환
+        Collider[] targets = Physics.OverlapSphere(transform.position, viewRadius, targetMask);
+        if (targets.Length == 0) return;
+
+        float lookingAngle = transform.eulerAngles.y;  //정면
+        Vector3 lookDir = AngleToDir(lookingAngle);
+
+        //미리 계산 (각도 변환을 반복하지 않도록)
+        float halfViewAngle = viewAngle * 0.5f;
+        float cosHalfViewAngle = Mathf.Cos(halfViewAngle * Mathf.Deg2Rad);
+
+        if (debugingNow)
+        {
+            Debug.Log("시야각 디버깅 확인");
+            Vector3 rightDir = AngleToDir(lookingAngle + halfViewAngle);
+            Vector3 leftDir = AngleToDir(lookingAngle - halfViewAngle);
+
+            Debug.DrawRay(transform.position, rightDir * viewRadius, Color.blue);
+            Debug.DrawRay(transform.position, leftDir * viewRadius, Color.blue);
+            Debug.DrawRay(transform.position, lookDir * viewRadius, Color.cyan);
+        }
+
+        targetList.Clear();
+
+        foreach (Collider target in targets)
+        {
+            Vector3 targetDir = (target.transform.position - transform.position).normalized;
+
+            //내적 값 비교
+            if (Vector3.Dot(lookDir, targetDir) >= cosHalfViewAngle)
+            {
+                //Raycast로 적이 가려져 있는지 확인
+                if (!Physics.Raycast(transform.position, targetDir, viewRadius, ObstacleMask))
+                {
+                    targetList.Add(target);
+                    Debug.Log("타겟 추가 확인");
+                    if (debugingNow) Debug.DrawLine(transform.position, target.transform.position, Color.red);
+                }
+            }
+        }
+    }
+    Vector3 AngleToDir(float angle)
+    {
+        float radian = angle * Mathf.Deg2Rad;
+        return new Vector3(Mathf.Sin(radian), 0f, Mathf.Cos(radian));
+    }
+
+    void LookAtPlayer(Transform player)
+    {
+        Vector3 direction = (player.position - transform.position).normalized;
+        direction.y = 0; // 고개 숙이는 걸 방지 (회전은 수평 방향만)
+
+        Quaternion targetRotation = Quaternion.LookRotation(direction);
+        transform.rotation = Quaternion.Lerp(transform.rotation, targetRotation, Time.deltaTime * rotationSpeed);
+    }
+
+
+
+ 
 
     public void ChangeHp(int damage)
     {
