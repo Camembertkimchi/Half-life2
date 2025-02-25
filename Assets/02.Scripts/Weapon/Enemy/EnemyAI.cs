@@ -56,9 +56,10 @@ public class EnemyAI : MonoBehaviour
     Quaternion targetRotation;
     [SerializeField]float rotationSpeed;
     [SerializeField] bool foundPlayer;
+    [SerializeField] Vector3 lastPlayerTransform;
     #endregion
 
-
+    IEnumerator currentCor;
 
     [SerializeField] int smgFireTimes = 2;
     [SerializeField] int arFireTimes = 4;
@@ -105,6 +106,8 @@ public class EnemyAI : MonoBehaviour
             currentAttackTime = maxAttackTime;
             //하프2는 총알 갯수에 따라 장전하지 않고 공격 횟수에 따라서 장전을 결정함
 
+            agent = GetComponent<NavMeshAgent>();
+
         }
         else
         {
@@ -121,13 +124,28 @@ public class EnemyAI : MonoBehaviour
             Debug.Log("발사해봄");
         }
 
-        state?.UpdateState();
+        //state?.UpdateState();
         Viewing();
         if (targetList.Count > 0)
         {
             LookAtPlayer(targetList[0].transform); // 감지된 플레이어 바라보기
         }
-
+        else if(foundPlayer == true)
+        {
+            currentCor = Chase();
+            StartCoroutine(currentCor);
+        }
+        if (currentAttackTime <= 0)
+        {
+            if(currentCor != null)
+            {
+                StopCoroutine(currentCor);
+                currentCor = null;
+               
+            }
+            currentCor = Reloading();
+            StartCoroutine(currentCor);
+        }
     }
 
 
@@ -159,6 +177,7 @@ public class EnemyAI : MonoBehaviour
         yield return reloadDelay;
         currentAttackTime = maxAttackTime;
         NowReloading = false; //장전 완료!
+    
     }
 
 
@@ -172,12 +191,43 @@ public class EnemyAI : MonoBehaviour
     IEnumerator Hiding()//Reloading으로 불러오세요!
     {
         //아무튼 숨는 로직
-        //Player가 시야에 없다 + 앞이 벽이다 = 숨었다! else 벽이 주변에 없다!
-        NowHiding = false;
+        //앞이 벽이다 = 숨었다! else 벽이 주변에 없다!
+        Collider[] walls = Physics.OverlapSphere(transform.position, 4, ObstacleMask);
+        //Transform lastPos = transform;
 
-        
+        if (walls.Length > 0)
+        {
+            Transform wall = walls[0].transform;
+
+            Vector3 directionToPlayer = (lastPlayerTransform - wall.position).normalized;
+            Vector3 hidePos = wall.position - directionToPlayer;
+
+            agent.SetDestination(hidePos);
+            NowHiding = false;
+        }
+        else
+        {
+            NowHiding = false;
+        }
         yield return new WaitUntil(() => NowReloading == false);
+        currentCor = null;
         //움직여!
+    }
+
+    IEnumerator Chase()
+    {
+       
+
+        while(targetList.Count == 0 && transform.position != lastPlayerTransform)
+        {
+            agent.SetDestination(lastPlayerTransform);
+            yield return null;
+            
+        }
+        if(targetList.Count == 0)
+        {
+            foundPlayer = false;
+        }
     }
 
 
@@ -196,8 +246,12 @@ public class EnemyAI : MonoBehaviour
 
     void Viewing()
     {
-      
-
+        targetList.Clear();
+        //if (targetList.Count <= 0 && foundPlayer == true)
+        //{
+        //    Debug.Log("추격 개시");
+        //    StartCoroutine(Chase());
+        //}
         //OverlapSphere 결과가 없으면 바로 반환
         Collider[] targets = Physics.OverlapSphere(transform.position, viewRadius, targetMask);
         if (targets.Length == 0) return;
@@ -220,14 +274,7 @@ public class EnemyAI : MonoBehaviour
             Debug.DrawRay(transform.position, lookDir * viewRadius, Color.cyan);
         }
 
-        //if (targetList != null && foundPlayer == true)
-        //{
-        //    transform.position = targetList[0].transform.position;
-        //}
-        //else
-        //{
-            targetList.Clear();
-        //}
+
         
 
         foreach (Collider target in targets)
@@ -242,13 +289,22 @@ public class EnemyAI : MonoBehaviour
                 {
                     targetList.Add(target);
                     foundPlayer = true;
+                    lastPlayerTransform = target.transform.position;
                     Debug.Log("타겟 추가 확인");
                     if (debugingNow) Debug.DrawLine(transform.position, target.transform.position, Color.red);
+                    //공격
+                    if (currentAttackTime > 0)
+                    {
+                        currentWeapon.FireWeapon();
+                    }
+
+                    
                 }
+                
             }
            
         }
-       
+        
 
 
     }

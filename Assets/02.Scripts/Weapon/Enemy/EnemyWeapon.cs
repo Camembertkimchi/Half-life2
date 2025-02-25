@@ -10,11 +10,16 @@ public class EnemyWeapon : MonoBehaviour, IEnemyWeapon
     [SerializeField] Transform muzzlePos;
     [SerializeField] int fireTimes;//현재 주기
     static readonly WaitForSeconds weaponDelay = new WaitForSeconds(1f);
+    static readonly WaitForSeconds fireDelay = new WaitForSeconds(0.3f);//발견하고 총을 쏘는 시간
     [SerializeField] int maxFireTimes;//한 주기 당 발사하는 총알 갯수
     Weapons type;
     [SerializeField] BulletPooling pool;
     float accuracy;
     Vector3 randomSpread;
+    IEnumerator currentCor;
+
+
+
     Weapons IEnemyWeapon.Type 
     { 
         get { return type; } 
@@ -43,20 +48,26 @@ public class EnemyWeapon : MonoBehaviour, IEnemyWeapon
 
     public void FireWeapon()
     {
-        StartCoroutine(Fire());
-
+        if (currentCor == null)
+        {
+            currentCor = Fire();
+            StartCoroutine(currentCor);
+        }
     }
 
     public IEnumerator Fire()
     {
-
-        while(enemyAI != null && enemyAI.AliveState == true && enemyAI.AttackTime > 0)
+        yield return fireDelay;
+        while (enemyAI != null && enemyAI.AliveState == true && enemyAI.AttackTime > 0)
         {
 
             while(fireTimes > 0)
             {
-                if(type == Weapons.Shotgun)
+                
+                if (type == Weapons.Shotgun)
                 {
+
+                    
                     for(int i = 0; i < 12;  i++)
                     {
                         randomSpread.x = Random.Range(-accuracy * 0.5f, accuracy * 0.5f);
@@ -104,6 +115,7 @@ public class EnemyWeapon : MonoBehaviour, IEnemyWeapon
             yield return weaponDelay;
 
         }
+        currentCor = null;
         yield break;
     }
 }
