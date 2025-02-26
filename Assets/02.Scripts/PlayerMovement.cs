@@ -19,17 +19,13 @@ public class PlayerMovement : MonoBehaviour
     Transform camTr;
     float verticalRot;
 
-    [SerializeField]List<ScriptableWeapon> weapon = new List<ScriptableWeapon>();
-    GameObject currentWeapon;
-    [SerializeField]int pistolAmmo;
-    [SerializeField]int arAmmo;
-    [SerializeField]int sgAmmo;
-    [SerializeField]int grande;
-    [SerializeField]int rpgAmmo;
-    [SerializeField]int magnumAmmo;
+    PlayerWeaponState currentState;
+    [SerializeField] PlayerWeapon weapon;
+   
 
 
-    [SerializeField] Canvas playerUI;
+    [SerializeField] GameObject playerUI;
+    [SerializeField] GameObject weaponSelectUI;
 
 
 
@@ -101,10 +97,7 @@ public class PlayerMovement : MonoBehaviour
 
     void Attack1()
     {
-        if(weapon != null)
-        {
-            
-        }
+       
     }
 
 

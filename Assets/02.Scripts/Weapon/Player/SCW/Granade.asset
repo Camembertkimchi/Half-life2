@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5c71c644a73d49a48af30d71bb425307, type: 3}
+  m_Name: Granade
+  m_EditorClassIdentifier: 
+  WeaponName: Granade
+  damage: 150
+  fireRate: 2
+  currentAmmo: 1
+  maxAmmo: 6
+  weaponLoadOut: 4
+  weaponType: 1
+  ammoType: 6

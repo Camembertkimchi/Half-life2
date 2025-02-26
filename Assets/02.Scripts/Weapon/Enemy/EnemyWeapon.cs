@@ -84,7 +84,7 @@ public class EnemyWeapon : MonoBehaviour, IEnemyWeapon
                         {
                             weaponInfo.bulletScript.Damage = weaponInfo.damage;
                         }
-                        weaponInfo.bulletScript.Initialize(pool);
+                        weaponInfo.bulletScript.Initialize(pool, false);
                     }
                 }
                 else
@@ -101,7 +101,7 @@ public class EnemyWeapon : MonoBehaviour, IEnemyWeapon
                     {
                         weaponInfo.bulletScript.Damage = weaponInfo.damage;
                     }
-                    weaponInfo.bulletScript.Initialize(pool);
+                    weaponInfo.bulletScript.Initialize(pool, false);
 
                 }
                 

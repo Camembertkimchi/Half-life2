@@ -10,7 +10,7 @@ public class BulletCon : MonoBehaviour
     [SerializeField]bool isReleased = false;
     static readonly WaitForSeconds bulletReleaseTime = new WaitForSeconds(2f);
     IEnumerator currentCor;
-
+    [SerializeField]bool shootedByPlayer;
     public int Damage
     {
         get { return damage; } set { damage = value; }
@@ -34,10 +34,13 @@ public class BulletCon : MonoBehaviour
         
     }
 
-    
 
-    public void Initialize(BulletPooling pool)
+
+    public void Initialize(BulletPooling pool, bool x)
     {
+        shootedByPlayer = x;
+        if (!shootedByPlayer) bulletSpeed = 15f;
+        else bulletSpeed = 20f;
         bulletPool = pool;
         if (!isReleased)
         {
@@ -89,21 +92,34 @@ public class BulletCon : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        if (other.gameObject.CompareTag("Player"))
+        if(!shootedByPlayer)//¿˚¿Ã ΩÚ ∂ß
         {
-            var player = GetComponent<PlayerMovement>();
-            player.ChangeHp(-damage);
+            if (other.gameObject.CompareTag("Player"))
+            {
+                var player = GetComponent<PlayerMovement>();
+                player.ChangeHp(-damage);
+            }
         }
         
-         
         
         
-        
-        else if (other.gameObject.CompareTag("DistroyableObj"))
+
+        if(shootedByPlayer == true)
         {
-            //var target = GetComponent<ObjectHealth>();
-            //target.ChangeHp(-damage);
+            if (other.gameObject.CompareTag("Enemy"))
+            {
+                var enemy = GetComponent<EnemyAI>();
+                enemy.ChangeHp(-damage);
+            }
         }
+        
+        
+        
+        //else if (other.gameObject.CompareTag("DistroyableObj"))
+        //{
+        //    //var target = GetComponent<ObjectHealth>();
+        //    //target.ChangeHp(-damage);
+        //}
     }
 
 }
