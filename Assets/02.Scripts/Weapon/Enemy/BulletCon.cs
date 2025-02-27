@@ -49,7 +49,6 @@ public class BulletCon : MonoBehaviour
         }
         isReleased = true;
 
-        Debug.Log("제거반 불러라");
         if(currentCor == null)
         {
             currentCor = DelayedRelease();
@@ -65,7 +64,6 @@ public class BulletCon : MonoBehaviour
 
     void Release()
     {
-        Debug.Log("제거 한다");
         bulletPool.ReleaseBullet(gameObject);
     }
 
@@ -79,11 +77,14 @@ public class BulletCon : MonoBehaviour
     {
         
        
-        Debug.Log("응애 나 꺼졌엉");
-        if(currentCor != null || isReleased)
+        if(isReleased == true)
         {
             isReleased = false;
-            StopCoroutine(currentCor);
+            if(currentCor != null)
+            {
+                StopCoroutine(currentCor);
+            }
+           
             currentCor = null;
         }
     }

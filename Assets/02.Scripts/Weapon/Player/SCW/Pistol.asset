@@ -12,15 +12,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5c71c644a73d49a48af30d71bb425307, type: 3}
   m_Name: Pistol
   m_EditorClassIdentifier: 
-  bulletCon: {fileID: 0}
+  bulletScript: {fileID: 0}
   bullet: {fileID: 0}
   WeaponName: Pistol
   damage: 15
   fireRate: 0.15
-  currentAmmo: 18
   maxAmmo: 225
+  maxMag: 0
+  state: 4
   weaponLoadOut: 1
   weaponType: 1
   ammoType: 1
   acurracyMin: 0.03
   acurracyMax: 0.08
+  spreadIncreaseRate: 0.05
+  spreadRecoveryRate: 0.1

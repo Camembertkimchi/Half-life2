@@ -12,11 +12,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5c71c644a73d49a48af30d71bb425307, type: 3}
   m_Name: RPG
   m_EditorClassIdentifier: 
+  bulletScript: {fileID: 0}
+  bullet: {fileID: 0}
   WeaponName: RPG
   damage: 120
   fireRate: 0
-  currentAmmo: 1
   maxAmmo: 5
+  maxMag: 0
+  state: 512
   weaponLoadOut: 4
   weaponType: 1
   ammoType: 7
+  acurracyMin: 0
+  acurracyMax: 0
+  spreadIncreaseRate: 0.05
+  spreadRecoveryRate: 0.1

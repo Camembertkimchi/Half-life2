@@ -12,15 +12,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5c71c644a73d49a48af30d71bb425307, type: 3}
   m_Name: SMG
   m_EditorClassIdentifier: 
-  bulletCon: {fileID: 0}
+  bulletScript: {fileID: 0}
   bullet: {fileID: 0}
   WeaponName: SMG
   damage: 12
   fireRate: 0.05
-  currentAmmo: 45
-  maxAmmo: 225
+  maxAmmo: 45
+  maxMag: 225
+  state: 16
   weaponLoadOut: 2
   weaponType: 2
   ammoType: 1
   acurracyMin: 0.15
   acurracyMax: 0.45
+  spreadIncreaseRate: 0.05
+  spreadRecoveryRate: 0.1

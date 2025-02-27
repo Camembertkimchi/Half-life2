@@ -37,7 +37,13 @@ public class PlayerMovement : MonoBehaviour
 
         camTr = Camera.main.transform;//메인캠 달아주시고
         Cursor.lockState = CursorLockMode.Locked;//커서 고정
+
         
+        if(weapon == null)
+        {
+            weapon = GetComponentInChildren<PlayerWeapon>();
+        }
+
     }
 
     private void Update()
@@ -46,7 +52,15 @@ public class PlayerMovement : MonoBehaviour
         LookAround();
         Jump();
        
-       
+       if(Input.GetMouseButtonDown(0))
+        {
+            weapon.Fire1();
+        }
+        if (Input.GetKeyDown(KeyCode.Alpha1))
+        {
+            currentState = PlayerWeaponState.SMG;
+            weapon.EquipWeapon(currentState);
+        }
 
         
 

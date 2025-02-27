@@ -32,7 +32,7 @@ public class BulletPooling : MonoBehaviour
             actionOnGet: bullet => bullet.SetActive(true),
             actionOnRelease: bullet => bullet.SetActive(false),
             actionOnDestroy: bullet => Destroy(bullet),
-            collectionCheck: false, defaultCapacity: 20, maxSize: 300
+            collectionCheck: false, defaultCapacity: 50, maxSize: 300
             );
 
 
@@ -43,7 +43,7 @@ public class BulletPooling : MonoBehaviour
     //ObjectPool.Get()은, 갯수가 없으면 ++을 해서 만들어줌
     public void ReleaseBullet(GameObject bullet)
     {
-        Debug.Log("회수 완");
+
         bulletPool.Release(bullet);
        
     }

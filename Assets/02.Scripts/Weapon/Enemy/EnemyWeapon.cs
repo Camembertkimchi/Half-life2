@@ -42,7 +42,6 @@ public class EnemyWeapon : MonoBehaviour, IEnemyWeapon
         
         
         accuracy = weaponInfo.accuracy;
-        Debug.Log(accuracy);
 
     }
 
@@ -78,7 +77,6 @@ public class EnemyWeapon : MonoBehaviour, IEnemyWeapon
                         weaponInfo.bullet = pool.GetBullet();
                         weaponInfo.bullet.transform.position = muzzlePos.position;
                         weaponInfo.bullet.transform.rotation = Quaternion.LookRotation(muzzlePos.forward + randomSpread);
-                        Debug.Log(randomSpread);
                         weaponInfo.bulletScript = weaponInfo.bullet.GetComponent<BulletCon>();
                         if (weaponInfo.bulletScript.Damage != weaponInfo.damage)
                         {

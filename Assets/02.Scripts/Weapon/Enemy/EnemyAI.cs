@@ -265,7 +265,6 @@ public class EnemyAI : MonoBehaviour
 
         if (debugingNow)
         {
-            Debug.Log("시야각 디버깅 확인");
             Vector3 rightDir = AngleToDir(lookingAngle + halfViewAngle);
             Vector3 leftDir = AngleToDir(lookingAngle - halfViewAngle);
 
@@ -290,7 +289,6 @@ public class EnemyAI : MonoBehaviour
                     targetList.Add(target);
                     foundPlayer = true;
                     lastPlayerTransform = target.transform.position;
-                    Debug.Log("타겟 추가 확인");
                     if (debugingNow) Debug.DrawLine(transform.position, target.transform.position, Color.red);
                     //공격
                     if (currentAttackTime > 0)
