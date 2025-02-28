@@ -61,7 +61,15 @@ public class PlayerMovement : MonoBehaviour
             currentState = PlayerWeaponState.SMG;
             weapon.EquipWeapon(currentState);
         }
-
+        if (Input.GetKeyDown(KeyCode.Alpha2))
+        {
+            currentState = PlayerWeaponState.Shotgun;
+            weapon.EquipWeapon(currentState);
+        }
+        if(Input.GetKeyDown(KeyCode.R))
+        {
+            weapon.Reloading();
+        }
         
 
         

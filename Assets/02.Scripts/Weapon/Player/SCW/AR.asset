@@ -23,7 +23,7 @@ MonoBehaviour:
   weaponLoadOut: 2
   weaponType: 2
   ammoType: 3
-  acurracyMin: 0.03
+  acurracyMin: 0.01
   acurracyMax: 0.1
-  spreadIncreaseRate: 0.05
-  spreadRecoveryRate: 0.1
+  spreadIncreaseRate: 0.02
+  spreadRecoveryRate: 0.07

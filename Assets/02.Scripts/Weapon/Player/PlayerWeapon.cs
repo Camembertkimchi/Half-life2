@@ -26,10 +26,10 @@ public class PlayerWeapon : MonoBehaviour
     [SerializeField]PlayerScriptableWeapon[] weaponScripts;
     [SerializeField]GameObject[] weaponPrefabs;
     Dictionary<string, GameObject> weaponDictionary = new Dictionary<string, GameObject>();
-    GameObject activatedWeapon = null;
+    [SerializeField]GameObject activatedWeapon = null;
     Dictionary<string, PlayerScriptableWeapon> weaponScriptDictionary = new Dictionary<string, PlayerScriptableWeapon>();
-    PlayerScriptableWeapon activatedWeaponScript;
-    PlayerWeaponState currentWeaponState;
+    [SerializeField]PlayerScriptableWeapon activatedWeaponScript;
+    [SerializeField] PlayerWeaponState currentWeaponState;
     [SerializeField]Transform muzzlePos;
     [SerializeField] int damage;
     [SerializeField] BulletPooling pool;
@@ -85,8 +85,8 @@ public class PlayerWeapon : MonoBehaviour
 
     [SerializeField]int currentMag;
     Dictionary<PlayerWeaponState, int> ammoDict = new Dictionary<PlayerWeaponState, int>();
-    Dictionary<PlayerWeaponState, int> magaineDict = new Dictionary<PlayerWeaponState, int>();
-
+    Dictionary<AmmoType, int> magaineDict = new Dictionary<AmmoType, int>();
+    //탄 종류별 관리를 위한 enum 사용 
     
 
     [SerializeField] int granadeForSmg;
@@ -121,7 +121,8 @@ public class PlayerWeapon : MonoBehaviour
             }
 
             ammoDict[weapon.state] = weapon.maxAmmo;
-            magaineDict[weapon.state] = weapon.maxMag;
+            
+            magaineDict[weapon.ammoType] = weapon.maxMag;
             Debug.Log(weapon);
         }
         foreach(var obj in weaponPrefabs)
@@ -158,13 +159,17 @@ public class PlayerWeapon : MonoBehaviour
  
     public void Reloading()
     {
-        if (currentCor != null) currentCor = null;
-        currentCor = Reload();
-        StartCoroutine(currentCor);
+        if (currentMag > 0)
+        {
+            if (currentCor != null) currentCor = null;
+            currentCor = Reload();
+            StartCoroutine(currentCor);
+        }
+        
     }
     IEnumerator Reload()
     {
-        anim.SetTrigger("Reload");
+        //anim.SetTrigger("Reload");
         nowReloading = true;
         yield return ReloadingTime;
         if (weaponScriptDictionary.TryGetValue(currentWeaponState.ToString(), out PlayerScriptableWeapon data))
@@ -173,13 +178,14 @@ public class PlayerWeapon : MonoBehaviour
             int ammoToReload = Mathf.Min(needAmmo, currentMag);//20, 100이면 20을 고르는 함수
             //이렇게 되고 반영하면 장탄수는 모자라면 모자란 만큼만 장전
             //탄창이 충분해도 깎인 만큼만 가져오는 형태임 굳 ㅇㅇ
-
+            
             currentAmmo += ammoToReload;
             currentMag -= ammoToReload;
             //딕셔너리에 반영함
+            
             ammoDict[currentWeaponState] = currentAmmo;
-            magaineDict[currentWeaponState] = currentMag;
-
+            magaineDict[data.ammoType] -= currentMag;
+            nowReloading = false;
         }
 
         #region 하드 코딩의 흔적
@@ -359,7 +365,7 @@ public class PlayerWeapon : MonoBehaviour
             activatedWeaponScript = Instantiate(weaponScript);
 
             // 총알 프리팹 설정
-            //activatedWeaponScript.SetBullet(pool.bulletPrefab);
+            activatedWeaponScript.SetBullet(pool.bulletPrefab);
             //activatedWeaponScript.bulletScript = activatedWeaponScript.bullet.GetComponent<BulletCon>();
             //
             ////데미지 적용
@@ -437,7 +443,7 @@ public class PlayerWeapon : MonoBehaviour
         {
             currentWeaponState = newWeaponState;
             currentAmmo = ammoDict[newWeaponState];
-            currentMag = magaineDict[newWeaponState];
+            currentMag = magaineDict[activatedWeaponScript.ammoType];
         }
         //if (anim != null) anim = null;
 
@@ -450,7 +456,7 @@ public class PlayerWeapon : MonoBehaviour
     {
         if (activatedWeapon == null || currentAmmo <= 0 || nowReloading == true) return;
         Debug.Log("쏜다!");
-        if(activatedWeaponScript.weaponType == WeaponType.FullAuto)
+        if(activatedWeaponScript.weaponType == WeaponType.FullAuto || activatedWeaponScript.weaponType == WeaponType.Melee)
         {
             if (!fullAutoFiring)
             {
@@ -474,6 +480,7 @@ public class PlayerWeapon : MonoBehaviour
         while (Input.GetMouseButton(0) && currentAmmo > 0)
         {
             Shoot();
+            //anim.SetTrigger("Fire");
             yield return new WaitForSeconds(activatedWeaponScript.fireRate);
         }
         fullAutoFiring = false;
@@ -481,7 +488,11 @@ public class PlayerWeapon : MonoBehaviour
 
     IEnumerator SemiAutoFire()
     {
-        Shoot();
+
+            Shoot();
+        
+        
+        //anim.SetTrigger("Fire");
         yield return new WaitForSeconds(activatedWeaponScript.fireRate);
         semiAutoFiring = false;
     }
@@ -491,18 +502,46 @@ public class PlayerWeapon : MonoBehaviour
         currentAmmo--;
         ammoDict[currentWeaponState] = currentAmmo;
 
-        Vector3 fireDir = GetSpreadDir();
+        Vector3 fireDir = Vector3.zero;
+       
 
-        activatedWeaponScript.bullet = pool.GetBullet();
-        activatedWeaponScript.bullet.transform.position = muzzlePos.transform.position;
-        activatedWeaponScript.bullet.transform.rotation = Quaternion.LookRotation(fireDir);
-        activatedWeaponScript.bulletScript = activatedWeaponScript.bullet.GetComponent<BulletCon>();
-        if (activatedWeaponScript.bulletScript.Damage != activatedWeaponScript.damage)
+        if (currentWeaponState == PlayerWeaponState.Shotgun)
         {
-            activatedWeaponScript.bulletScript.Damage = activatedWeaponScript.damage;
-        }
+            for(int i = 0; i < 12; i++)
+            {
+                activatedWeaponScript.bullet = pool.GetBullet();
+                activatedWeaponScript.bulletScript = activatedWeaponScript.bullet.GetComponent<BulletCon>();
+                activatedWeaponScript.bullet.transform.position = muzzlePos.transform.position;
 
-        activatedWeaponScript.bulletScript.Initialize(pool, true);
+                if (activatedWeaponScript.bulletScript.Damage != activatedWeaponScript.damage)
+                {
+                    activatedWeaponScript.bulletScript.Damage = activatedWeaponScript.damage;
+                }
+                fireDir = GetSpreadDir();
+                activatedWeaponScript.bullet.transform.rotation = Quaternion.LookRotation(fireDir);
+                
+                activatedWeaponScript.bulletScript.Initialize(pool, true);
+            }
+        }
+        else
+        {
+            activatedWeaponScript.bullet = pool.GetBullet();
+            activatedWeaponScript.bulletScript = activatedWeaponScript.bullet.GetComponent<BulletCon>();
+            activatedWeaponScript.bullet.transform.position = muzzlePos.transform.position;
+
+            if (activatedWeaponScript.bulletScript.Damage != activatedWeaponScript.damage)
+            {
+                activatedWeaponScript.bulletScript.Damage = activatedWeaponScript.damage;
+            }
+            fireDir = GetSpreadDir();
+            activatedWeaponScript.bullet.transform.rotation = Quaternion.LookRotation(fireDir);
+
+            activatedWeaponScript.bulletScript.Initialize(pool, true);
+        }
+       
+       
+
+      
         
 
         if (anim != null) anim.SetTrigger("Fire");

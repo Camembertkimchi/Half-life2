@@ -17,13 +17,13 @@ MonoBehaviour:
   WeaponName: SR
   damage: 100
   fireRate: 0.4
-  maxAmmo: 15
-  maxMag: 0
+  maxAmmo: 5
+  maxMag: 15
   state: 128
   weaponLoadOut: 3
   weaponType: 1
   ammoType: 5
   acurracyMin: 0
-  acurracyMax: 0
+  acurracyMax: 0.05
   spreadIncreaseRate: 0.05
-  spreadRecoveryRate: 0.1
+  spreadRecoveryRate: 0.01

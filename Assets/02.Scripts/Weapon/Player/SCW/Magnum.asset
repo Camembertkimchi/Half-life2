@@ -25,5 +25,5 @@ MonoBehaviour:
   ammoType: 2
   acurracyMin: 0
   acurracyMax: 0.2
-  spreadIncreaseRate: 0.05
-  spreadRecoveryRate: 0.1
+  spreadIncreaseRate: 0.1
+  spreadRecoveryRate: 0.03
