@@ -1,7 +1,9 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.UI;
 using UnityEngine.VFX;
 
 public enum PlayerWeaponState
@@ -21,7 +23,7 @@ public enum PlayerWeaponState
 
 public class PlayerWeapon : MonoBehaviour
 {
-    //PlayerMovement player; 
+    [SerializeField]PlayerMovement player; 
 
     [SerializeField]PlayerScriptableWeapon[] weaponScripts;
     [SerializeField]GameObject[] weaponPrefabs;
@@ -31,12 +33,15 @@ public class PlayerWeapon : MonoBehaviour
     [SerializeField]PlayerScriptableWeapon activatedWeaponScript;
     [SerializeField] PlayerWeaponState currentWeaponState;
     [SerializeField]Transform muzzlePos;
-    [SerializeField] int damage;
     [SerializeField] BulletPooling pool;
-    
-    [SerializeField] GameObject weaponStatusUI;
-    [SerializeField] Animator anim;
-
+    [SerializeField] Text currentAmmoUI;
+    [SerializeField] Text currentMagUI;
+    // [SerializeField] Animator defaultArmAnim;
+    // [SerializeField] Animator defaultGunAnim;
+    // [SerializeField] AnimatorOverrideController overrideArmAnim;
+    // [SerializeField] AnimatorOverrideController overrideGunAnim;
+    [SerializeField] GameObject muzzleFlashObj;
+    [SerializeField] ParticleSystem muzzleFlashFX;
     static readonly WaitForSeconds ReloadingTime = new WaitForSeconds(1.2f);
     IEnumerator currentCor;
    [SerializeField] bool nowReloading = false;
@@ -78,10 +83,6 @@ public class PlayerWeapon : MonoBehaviour
     //[SerializeField] int maxMagnumMag;
     #endregion
     [SerializeField]int currentAmmo;
-    public int CurrentAmmo//UI소통용
-    {
-        get { return currentAmmo; }
-    }
 
     [SerializeField]int currentMag;
     Dictionary<PlayerWeaponState, int> ammoDict = new Dictionary<PlayerWeaponState, int>();
@@ -89,21 +90,32 @@ public class PlayerWeapon : MonoBehaviour
     //탄 종류별 관리를 위한 enum 사용 
     
 
-    [SerializeField] int granadeForSmg;
-    public int GrandeForSmg
-    {
-        get { return granadeForSmg; }
-        private set { granadeForSmg = value; }
-    }
-    [SerializeField] int coreForAR;//얘는 만들지 말지 모르겠음 ㅇㅇ 
-
-    [SerializeField] GameObject ScopeUI;
+    //[SerializeField] int granadeForSmg;
+    //public int GrandeForSmg
+    //{
+    //    get { return granadeForSmg; }
+    //    private set { granadeForSmg = value; }
+    //}
+    //[SerializeField] int coreForAR;
 
     [Header("초당 정확도 감소와 회복 속도")]
 
 
     private float currentSpread = 0f; // 현재 탄 퍼짐 값
     private float lastShotTime = 0f;  // 마지막으로 발사한 시간
+
+    #region 중력건
+    [SerializeField] Camera playerCam;
+    [SerializeField] Transform holdPos;
+    [SerializeField] float grabDistance = 30f;
+    [SerializeField] float throwForce = 300f;
+    [SerializeField] LayerMask grabbableLayer;
+    [SerializeField] Rigidbody grabbedObj;
+    [SerializeField] bool isHolding = false;
+    [SerializeField] float radius;//원 범위
+
+    #endregion
+
 
 
     private void Start()
@@ -139,10 +151,15 @@ public class PlayerWeapon : MonoBehaviour
                 Debug.Log($"{name} 이미 등록됨");
             }
         }
+
+        //if(defaultGunAnim == null) defaultGunAnim = GetComponent<Animator>();
+
+        //if(defaultArmAnim == null)defaultArmAnim = GameObject.Find("Arms").GetComponent<Animator>();
+        muzzleFlashFX = muzzleFlashObj.GetComponent<ParticleSystem>();
     }
 
 
-    private void Update()
+    private void FixedUpdate()
     {
         if (Time.time - lastShotTime > 0.1f && activatedWeaponScript != null) // 발사 후 0.1초 이상 쉬었을 때
         {
@@ -153,9 +170,34 @@ public class PlayerWeapon : MonoBehaviour
             }
             
         }
+
+        if (isHolding == true && grabbedObj != null)
+        {
+            MoveObj();
+        }
+        if(playerCam.fieldOfView != 60 && currentWeaponState != PlayerWeaponState.Sniper)
+        {
+            playerCam.fieldOfView = 60;
+        }
+        if (player.Alive == false)
+        {
+            Destroy(this);
+        }
+        UpdateAmmo();
+        
+
     }
 
-
+    void UpdateAmmo()
+    {
+        if(currentWeaponState == PlayerWeaponState.GravityGun)
+        {
+            currentMagUI.text = "";
+            currentAmmoUI.text = "";
+        }
+        currentAmmoUI.text = currentAmmo + "";
+        currentMagUI.text = currentMag + "";
+    }
  
     public void Reloading()
     {
@@ -169,7 +211,7 @@ public class PlayerWeapon : MonoBehaviour
     }
     IEnumerator Reload()
     {
-        //anim.SetTrigger("Reload");
+        //defaultGunAnim.SetBool("Reload", true);
         nowReloading = true;
         yield return ReloadingTime;
         if (weaponScriptDictionary.TryGetValue(currentWeaponState.ToString(), out PlayerScriptableWeapon data))
@@ -185,6 +227,7 @@ public class PlayerWeapon : MonoBehaviour
             
             ammoDict[currentWeaponState] = currentAmmo;
             magaineDict[data.ammoType] -= currentMag;
+           // defaultGunAnim.SetBool("Reload", false);
             nowReloading = false;
         }
 
@@ -445,18 +488,79 @@ public class PlayerWeapon : MonoBehaviour
             currentAmmo = ammoDict[newWeaponState];
             currentMag = magaineDict[activatedWeaponScript.ammoType];
         }
+
+        if(currentWeaponState != PlayerWeaponState.GravityGun) muzzlePos = GameObject.Find("muzzle").GetComponent<Transform>();
         //if (anim != null) anim = null;
 
-        anim = activatedWeapon.GetComponent<Animator>();
+        //anim = activatedWeapon.GetComponent<Animator>();
         //currentWeaponState = newWeaponState; // 현재 무기 상태 업데이트
+
+        // 기본 애니메이터에 AnimatorOverrideController를 설정하는 코드
+        //if (activatedWeaponScript.gunAnimatorOverride != null)
+        //{
+        //    Debug.Log("찾았다");
+        //    //defaultGunAnim.runtimeAnimatorController = activatedWeaponScript.gunAnimatorOverride;
+        //}
+        //
+        //
+        //if (activatedWeaponScript.armAnimatorOverride != null)
+        //{
+        //    //defaultArmAnim.runtimeAnimatorController = activatedWeaponScript.armAnimatorOverride;
+        //}
         
+        //if (activatedWeaponScript.gunAnimatorOverride != null)
+        //{
+            // 새로운 AnimatorOverrideController 생성
+            //AnimatorOverrideController newGunOverride = new AnimatorOverrideController(defalutGunAnim);
+            //AnimatorOverrideController newArmOverride = new AnimatorOverrideController(defalutArmAnim);
+
+            // 기존 애니메이션 클립 정보를 담을 리스트 생성
+            //List<KeyValuePair<AnimationClip, AnimationClip>> gunOverrides = new List<KeyValuePair<AnimationClip, AnimationClip>>();
+            //List<KeyValuePair<AnimationClip, AnimationClip>> armOverrides = new List<KeyValuePair<AnimationClip, AnimationClip>>();
+
+            // gunAnimatorOverride의 클립을 가져와서 적용
+            //foreach (var clip in activatedWeaponScript.gunAnimatorOverride.animationClips)
+            //{
+            //    // KeyValuePair<AnimationClip, AnimationClip> 형태로 추가
+            //    gunOverrides.Add(new KeyValuePair<AnimationClip, AnimationClip>(clip, activatedWeaponScript.gunAnimatorOverride[clip]));
+            //}
+            //
+            //// armAnimatorOverride의 클립을 가져와서 적용
+            //foreach (var clip in activatedWeaponScript.armAnimatorOverride.animationClips)
+            //{
+            //    // KeyValuePair<AnimationClip, AnimationClip> 형태로 추가
+            //    armOverrides.Add(new KeyValuePair<AnimationClip, AnimationClip>(clip, activatedWeaponScript.armAnimatorOverride[clip]));
+            //}
+            //
+            //// 새로운 오버라이드 설정
+            //newGunOverride.ApplyOverrides(gunOverrides);
+            //newArmOverride.ApplyOverrides(armOverrides);
+            //
+            //// 애니메이터에 적용
+            //defalutGunAnim.runtimeAnimatorController = newGunOverride;
+            //defalutArmAnim.runtimeAnimatorController = newArmOverride;
+
+            //defaultArmAnim = activatedWeaponScript.armAnimatorOverride;
+           // defaultGunAnim = activatedWeaponScript.gunAnimatorOverride;
+
+       // }
+       
+
+
     }
 
     public void Fire1()
     {
-        if (activatedWeapon == null || currentAmmo <= 0 || nowReloading == true) return;
-        Debug.Log("쏜다!");
-        if(activatedWeaponScript.weaponType == WeaponType.FullAuto || activatedWeaponScript.weaponType == WeaponType.Melee)
+        if (currentWeaponState == PlayerWeaponState.GravityGun && grabbedObj != null)
+        {
+           
+            ThrowObj();
+        }
+
+        else if (activatedWeapon == null || currentAmmo <= 0 || nowReloading == true) return;
+        
+        
+        else if(activatedWeaponScript.weaponType == WeaponType.FullAuto || activatedWeaponScript.weaponType == WeaponType.Melee)
         {
             if (!fullAutoFiring)
             {
@@ -475,12 +579,46 @@ public class PlayerWeapon : MonoBehaviour
 
     }
 
+    public void Fire2()
+    {
+       
+        switch (currentWeaponState)
+        {
+            case PlayerWeaponState.GravityGun:
+                if (grabbedObj == null)
+                {
+                    Debug.Log("잡아볼게");
+                    TryGrab();
+                }
+                else
+                {
+                    ReleaseObj();
+                }
+                break;
+            case PlayerWeaponState.Sniper:
+                if(playerCam.fieldOfView != 25)
+                {
+                    playerCam.fieldOfView = 25;
+                }
+                else
+                {
+                    playerCam.fieldOfView = 60;
+                }
+                
+                break;
+            default: break;
+        }
+       
+
+    }
+
+
     IEnumerator AutoFire()
     {
         while (Input.GetMouseButton(0) && currentAmmo > 0)
         {
             Shoot();
-            //anim.SetTrigger("Fire");
+            //defaultGunAnim.SetTrigger("Fire");
             yield return new WaitForSeconds(activatedWeaponScript.fireRate);
         }
         fullAutoFiring = false;
@@ -492,7 +630,7 @@ public class PlayerWeapon : MonoBehaviour
             Shoot();
         
         
-        //anim.SetTrigger("Fire");
+        //defaultGunAnim.SetTrigger("Fire");
         yield return new WaitForSeconds(activatedWeaponScript.fireRate);
         semiAutoFiring = false;
     }
@@ -538,13 +676,13 @@ public class PlayerWeapon : MonoBehaviour
 
             activatedWeaponScript.bulletScript.Initialize(pool, true);
         }
-       
-       
 
+        muzzleFlashObj.transform.position = muzzlePos.transform.position;
+        muzzleFlashFX.Play();
       
         
 
-        if (anim != null) anim.SetTrigger("Fire");
+        //if (defaultGunAnim != null) defaultGunAnim.SetTrigger("Fire");
     }
 
     Vector3 GetSpreadDir()
@@ -563,6 +701,66 @@ public class PlayerWeapon : MonoBehaviour
             Random.Range(-spreadAmout, spreadAmout));
 
         return dir.normalized;
+    }
+
+    void TryGrab()
+    {
+        Ray ray = playerCam.ScreenPointToRay(Input.mousePosition);
+        Debug.DrawRay(ray.origin, ray.direction * grabDistance, Color.red, 5f, false);
+        if (Physics.SphereCast(ray, radius, out RaycastHit hit, grabDistance, grabbableLayer))
+        {
+            Rigidbody rb = hit.collider.GetComponent<Rigidbody>();
+            if(rb != null)
+            {
+                grabbedObj = rb;
+                grabbedObj.useGravity = false;
+                grabbedObj.drag = 10;
+                isHolding = true;
+                
+            }
+            else
+            {
+                Debug.Log("못잡음 ㅋ");
+            }
+        }
+
+    }
+
+    void MoveObj()
+    {
+        if (grabbedObj == null) return;
+        Vector3 targetPos = holdPos.position;
+       
+        if(grabbedObj.transform.position != targetPos)
+        {
+            grabbedObj.MovePosition(Vector3.Lerp(grabbedObj.position, targetPos, Time.deltaTime * 30f));
+        }
+       
+    }
+
+    void ReleaseObj()
+    {
+        if(grabbedObj != null) 
+        {
+            {
+                grabbedObj.useGravity = true;
+                grabbedObj.drag = 1;
+                grabbedObj = null;
+                isHolding = false;
+            } 
+        }
+    }
+
+    void ThrowObj()
+    {
+        if(grabbedObj != null)
+        {
+            grabbedObj.useGravity = true;
+            grabbedObj.drag = 1;
+            grabbedObj.AddForce(playerCam.transform.forward * throwForce);
+            grabbedObj = null;
+            isHolding = false;
+        }
     }
 
 }

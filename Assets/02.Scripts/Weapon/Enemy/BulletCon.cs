@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Net;
 using UnityEngine;
 
 public class BulletCon : MonoBehaviour
@@ -11,6 +12,11 @@ public class BulletCon : MonoBehaviour
     static readonly WaitForSeconds bulletReleaseTime = new WaitForSeconds(2f);
     IEnumerator currentCor;
     [SerializeField]bool shootedByPlayer;
+    //[SerializeField] GameObject fx;
+    [SerializeField] float fxLifeTime;
+    //Collider col;
+    Rigidbody rb;
+    [SerializeField]ParticlePool particlePool;
     public int Damage
     {
         get { return damage; } set { damage = value; }
@@ -21,16 +27,18 @@ public class BulletCon : MonoBehaviour
         damage = bulletDamage;
     }
 
+    void Awake()
+    {
+        rb = GetComponent<Rigidbody>();
+        rb.collisionDetectionMode = CollisionDetectionMode.Continuous; // 터널링 방지
+       if(particlePool == null) particlePool = GameObject.Find("ParticlePool").GetComponent<ParticlePool>();
+    }
+
+
     private void FixedUpdate()
     {
-        //transform.position += Vector3.forward * bulletSpeed;
-        transform.Translate(Vector3.forward * bulletSpeed, Space.Self);
-
-        if (Input.GetKeyDown(KeyCode.U))
-        {
-            bulletPool.ReleaseBullet(this.gameObject);
-        }
-
+        Vector3 move = transform.forward * bulletSpeed * Time.fixedDeltaTime;
+        rb.MovePosition(rb.position + move);
         
     }
 
@@ -38,9 +46,10 @@ public class BulletCon : MonoBehaviour
 
     public void Initialize(BulletPooling pool, bool x)
     {
+       // col = GetComponent<Collider>();
         shootedByPlayer = x;
-        if (!shootedByPlayer) bulletSpeed = 15f;
-        else bulletSpeed = 20f;
+        //if (!shootedByPlayer) bulletSpeed = 15f;
+        //else bulletSpeed = 20f;
         bulletPool = pool;
         if (!isReleased)
         {
@@ -93,34 +102,64 @@ public class BulletCon : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        if(!shootedByPlayer)//적이 쏠 때
+       
+      
+
+
+        if (!shootedByPlayer)//적이 쏠 때
         {
             if (other.gameObject.CompareTag("Player"))
             {
-                var player = GetComponent<PlayerMovement>();
-                player.ChangeHp(-damage);
+                PlayerMovement player = other.GetComponent<PlayerMovement>();
+                player.ChangeHp(damage);
+                Release();
             }
         }
-        
-        
-        
 
-        if(shootedByPlayer == true)
+
+
+
+        if (shootedByPlayer == true)
         {
             if (other.gameObject.CompareTag("Enemy"))
             {
-                var enemy = GetComponent<EnemyAI>();
-                enemy.ChangeHp(-damage);
+                EnemyAI enemy = other.GetComponent<EnemyAI>();
+                enemy.ChangeHp(damage);
+                Release();
             }
         }
-        
-        
-        
-        //else if (other.gameObject.CompareTag("DistroyableObj"))
-        //{
-        //    //var target = GetComponent<ObjectHealth>();
-        //    //target.ChangeHp(-damage);
-        //}
+
+        if (other.gameObject.CompareTag("Bullet"))
+        {
+            return;
+        }
+
+        if (other != null)
+        {
+            Vector3 hitPoint = transform.position;
+            Vector3 hitNormal = -transform.forward;
+
+            var a = particlePool.GetParticle();
+            a.transform.position = hitPoint;
+            a.transform.rotation = Quaternion.LookRotation(hitNormal);
+
+            // fx 파티클 시스템이 있다면, 재생
+            ParticleSystem ps = a.GetComponent<ParticleSystem>();
+            if (ps != null)
+            {
+                ps.Play();
+            }
+
+
+            
+        }
+        Release();
+
+       
     }
 
+
 }
+    
+
+

@@ -17,13 +17,13 @@ MonoBehaviour:
   WeaponName: 357 Magnum
   damage: 60
   fireRate: 0.3
-  maxAmmo: 35
-  maxMag: 0
+  maxAmmo: 7
+  maxMag: 35
   state: 8
   weaponLoadOut: 1
   weaponType: 1
   ammoType: 2
   acurracyMin: 0
-  acurracyMax: 0.2
-  spreadIncreaseRate: 0.1
-  spreadRecoveryRate: 0.03
+  acurracyMax: 0.01
+  spreadIncreaseRate: 0.008
+  spreadRecoveryRate: 0.002

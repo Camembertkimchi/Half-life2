@@ -10,6 +10,7 @@ TagManager:
   - BulletSpawn
   - Enemy
   - DestroyableObj
+  - Bullet
   layers:
   - Default
   - TransparentFX
@@ -22,7 +23,7 @@ TagManager:
   - Head
   - Body
   - Wall
-  - 
+  - GrabbableObj
   - 
   - 
   - 

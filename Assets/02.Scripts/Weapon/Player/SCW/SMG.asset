@@ -23,7 +23,11 @@ MonoBehaviour:
   weaponLoadOut: 2
   weaponType: 2
   ammoType: 1
-  acurracyMin: 0.15
-  acurracyMax: 0.45
-  spreadIncreaseRate: 0.05
-  spreadRecoveryRate: 0.1
+  acurracyMin: 0.008
+  acurracyMax: 0.018
+  spreadIncreaseRate: 0.005
+  spreadRecoveryRate: 0.003
+  gunAnimatorOverride: {fileID: 0}
+  armAnimatorOverride: {fileID: 0}
+  fireSound: []
+  reloadSound: []

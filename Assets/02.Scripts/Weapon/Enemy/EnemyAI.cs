@@ -2,13 +2,8 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using Unity.VisualScripting;
-using UnityEditor.Experimental.GraphView;
-using UnityEditor.Rendering.LookDev;
 using UnityEngine;
 using UnityEngine.AI;
-using static ScriptableWeapon;
-using static UnityEditor.PlayerSettings;
-using static UnityEngine.GraphicsBuffer;
 
 public interface IEnemyWeapon
 {
@@ -31,9 +26,11 @@ public class EnemyAI : MonoBehaviour
     
     [SerializeField] int hp;
     NavMeshAgent agent;
-    [SerializeField]static readonly WaitForSeconds reloadDelay = new WaitForSeconds(2f);
+    [SerializeField]static readonly WaitForSeconds reloadDelay = new WaitForSeconds(3.3f);
     [SerializeField] int maxAttackTime = 5;
     [SerializeField] int currentAttackTime;
+    [SerializeField] Animator anim;
+    Rigidbody rb;
     public bool NowReloading
     {
         get; set;
@@ -106,60 +103,56 @@ public class EnemyAI : MonoBehaviour
             currentAttackTime = maxAttackTime;
             //하프2는 총알 갯수에 따라 장전하지 않고 공격 횟수에 따라서 장전을 결정함
 
-            agent = GetComponent<NavMeshAgent>();
-
+            
         }
         else
         {
             Debug.Log("무기 못읽음");
            
         }
+        agent = GetComponent<NavMeshAgent>();
+        anim = GetComponent<Animator>();
+        rb = GetComponent<Rigidbody>();
+
     }
 
-    private void Update()//For Test
+    private void Update()
     {
-        if (Input.GetKeyDown(KeyCode.I))
+        if(alive == true)
         {
-            currentWeapon.FireWeapon();
-            Debug.Log("발사해봄");
-        }
-
-        //state?.UpdateState();
-        Viewing();
-        if (targetList.Count > 0)
-        {
-            LookAtPlayer(targetList[0].transform); // 감지된 플레이어 바라보기
-        }
-        else if(foundPlayer == true)
-        {
-            currentCor = Chase();
-            StartCoroutine(currentCor);
-        }
-        if (currentAttackTime <= 0)
-        {
-            if(currentCor != null)
+            Viewing();
+            if (targetList.Count > 0)
             {
-                StopCoroutine(currentCor);
-                currentCor = null;
-               
+                LookAtPlayer(targetList[0].transform); // 감지된 플레이어 바라보기
             }
-            currentCor = Reloading();
-            StartCoroutine(currentCor);
+            else if (foundPlayer == true)
+            {
+                currentCor = Chase();
+                StartCoroutine(currentCor);
+            }
+            if (currentAttackTime <= 0)
+            {
+                if (currentCor != null)
+                {
+                    StopCoroutine(currentCor);
+                    currentCor = null;
+
+                }
+                currentCor = Reloading();
+                StartCoroutine(currentCor);
+                
+            }
+
+           if(lastPlayerTransform != null && !agent.pathPending && agent.remainingDistance <= agent.stoppingDistance)
+            {
+                anim.SetBool("Running", false);
+            }
+           
         }
-    }
+       
 
+        
 
-
-
-
-
-
-
-    void ChangeState(IEnemyState status)
-    {
-        state?.ExitState();
-        state = status;
-        state.UpdateState();
     }
 
 
@@ -171,19 +164,20 @@ public class EnemyAI : MonoBehaviour
     /// 
     IEnumerator Reloading()
     {
-        StartCoroutine("Hiding");
-        yield return new WaitUntil(() => NowHiding == false);
-        //애니메이션 재생
-        yield return reloadDelay;
-        currentAttackTime = maxAttackTime;
-        NowReloading = false; //장전 완료!
+        if(currentAttackTime != maxAttackTime)
+        {
+            StartCoroutine("Hiding");
+            yield return new WaitUntil(() => NowHiding == false);
+            anim.SetBool("Running", false);
+            anim.SetBool("Reload", true);
+            yield return reloadDelay;
+            currentAttackTime = maxAttackTime;
+            NowReloading = false; //장전 완료!
+            anim.SetBool("Reload", false);
+        }
+        
     
     }
-
-
-
-
-
     /// <summary>
     /// Reloading으로 불러올 것. 절대 단독 사용하지 마세요.
     /// </summary>
@@ -203,6 +197,7 @@ public class EnemyAI : MonoBehaviour
             Vector3 hidePos = wall.position - directionToPlayer;
 
             agent.SetDestination(hidePos);
+            anim.SetBool("Running", true);
             NowHiding = false;
         }
         else
@@ -216,17 +211,19 @@ public class EnemyAI : MonoBehaviour
 
     IEnumerator Chase()
     {
-       
 
-        while(targetList.Count == 0 && transform.position != lastPlayerTransform)
+        anim.SetBool("Running", true);
+        while (targetList.Count == 0 && transform.position != lastPlayerTransform)
         {
             agent.SetDestination(lastPlayerTransform);
             yield return null;
-            
+           
+
         }
-        if(targetList.Count == 0)
+        if (targetList.Count == 0)
         {
             foundPlayer = false;
+            anim.SetBool("Running", false);
         }
     }
 
@@ -247,12 +244,6 @@ public class EnemyAI : MonoBehaviour
     void Viewing()
     {
         targetList.Clear();
-        //if (targetList.Count <= 0 && foundPlayer == true)
-        //{
-        //    Debug.Log("추격 개시");
-        //    StartCoroutine(Chase());
-        //}
-        //OverlapSphere 결과가 없으면 바로 반환
         Collider[] targets = Physics.OverlapSphere(transform.position, viewRadius, targetMask);
         if (targets.Length == 0) return;
 
@@ -294,6 +285,7 @@ public class EnemyAI : MonoBehaviour
                     if (currentAttackTime > 0)
                     {
                         currentWeapon.FireWeapon();
+                        anim.SetBool("Fire", true);
                     }
 
                     
@@ -319,6 +311,7 @@ public class EnemyAI : MonoBehaviour
 
         targetRotation = Quaternion.LookRotation(direction);
         transform.rotation = Quaternion.Lerp(transform.rotation, targetRotation, Time.deltaTime * rotationSpeed);
+        //weapon.transform.rotation = Quaternion.Lerp(transform.rotation, targetRotation, Time.deltaTime * rotationSpeed);
     }
 
 
@@ -328,9 +321,10 @@ public class EnemyAI : MonoBehaviour
     public void ChangeHp(int damage)
     {
         
-        hp += damage;
+        hp -= damage;
         if(hp <= 0)
         {
+            alive = false;
             Die();
         }
     }
@@ -344,13 +338,15 @@ public class EnemyAI : MonoBehaviour
     IEnumerator Dead()
     {
 
-        //죽는 애니메이션
-        //무기 드랍 Instantiate로 해보삼
-        currentWeapon = null;//이걸로 한번 비워주시고
-        
+        anim.SetTrigger("Dead");
+
+
         yield return new WaitForSeconds(10f);
-        //Destroy할지 뭐 Disable 할지 알잘딱 해주셈 ㅇㅇ
+        gameObject.SetActive(false);
     }
+
+
+
 
 
 }

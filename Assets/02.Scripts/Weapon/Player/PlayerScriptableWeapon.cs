@@ -26,6 +26,10 @@ public class PlayerScriptableWeapon : ScriptableObject
     public float acurracyMax;
     public float spreadIncreaseRate = 0.05f; // 초당 정확도 감소 속도
     public float spreadRecoveryRate = 0.1f; // 초당 정확도 회복 속도
+    //public AnimatorOverrideController gunAnimatorOverride;  // 무기별 애니메이터 오버라이드
+    //public AnimatorOverrideController armAnimatorOverride;  // 팔 애니메이터 오버라이드
+    //public AudioClip[] fireSound;
+    //public AudioClip[] reloadSound;
 
 }
 public enum WeaponType { Melee = 0, SemiAuto, FullAuto }

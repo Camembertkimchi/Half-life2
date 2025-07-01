@@ -17,13 +17,22 @@ MonoBehaviour:
   WeaponName: AR2
   damage: 30
   fireRate: 0.1
-  maxAmmo: 150
-  maxMag: 0
+  maxAmmo: 30
+  maxMag: 150
   state: 32
   weaponLoadOut: 2
   weaponType: 2
   ammoType: 3
-  acurracyMin: 0.01
-  acurracyMax: 0.1
-  spreadIncreaseRate: 0.02
-  spreadRecoveryRate: 0.07
+  acurracyMin: 0.001
+  acurracyMax: 0.005
+  spreadIncreaseRate: 0.0002
+  spreadRecoveryRate: 0.0007
+  gunAnimatorOverride: {fileID: 22100000, guid: 18a097c48d18a0644a96b419f2a986ff, type: 2}
+  armAnimatorOverride: {fileID: 22100000, guid: a7cd968069402c74f889c586e403aa4c, type: 2}
+  fireSound:
+  - {fileID: 8300000, guid: 7d8c810c6c43bfd4b9730e3661f86b98, type: 3}
+  - {fileID: 8300000, guid: a1a6440c84a102f4d9f7a3b9288e15a8, type: 3}
+  - {fileID: 8300000, guid: 49d31c2fe10ffbc4c9ef45ab0c966d06, type: 3}
+  - {fileID: 8300000, guid: 012a45a8556a0f240a67ab743a547f4b, type: 3}
+  reloadSound:
+  - {fileID: 8300000, guid: f12edba8af796c24bb00ea2cb90052c0, type: 3}

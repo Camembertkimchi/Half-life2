@@ -15,15 +15,19 @@ MonoBehaviour:
   bulletScript: {fileID: 0}
   bullet: {fileID: 0}
   WeaponName: Shotgun
-  damage: 6
-  fireRate: 0.2
-  maxAmmo: 6
+  damage: 15
+  fireRate: 0.1
+  maxAmmo: 2
   maxMag: 30
   state: 64
   weaponLoadOut: 3
   weaponType: 1
   ammoType: 4
-  acurracyMin: 0.15
-  acurracyMax: 0.3
+  acurracyMin: 0.015
+  acurracyMax: 0.03
   spreadIncreaseRate: 0
   spreadRecoveryRate: 0
+  gunAnimatorOverride: {fileID: 0}
+  armAnimatorOverride: {fileID: 0}
+  fireSound: []
+  reloadSound: []

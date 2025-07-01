@@ -8,32 +8,37 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] float mouseSensativity;
     [SerializeField] int maxHp;
     [SerializeField] int currentHp;
-    [SerializeField] int armor;
     [SerializeField] float speed;
     [SerializeField] float jumpPower;
-    [SerializeField] bool dead = false;
+    int jumpCount;
+    [SerializeField] bool alive = true;
+    public bool Alive
+    {
+        get { return alive; }
+    }
 
     Rigidbody rigid;
-    CapsuleCollider bodyCol;
-    BoxCollider headCol;
+    //CapsuleCollider bodyCol;
+    //BoxCollider headCol; NoTime
     Transform camTr;
     float verticalRot;
-
+    
     PlayerWeaponState currentState;
     [SerializeField] PlayerWeapon weapon;
-   
 
-
-    [SerializeField] GameObject playerUI;
-    [SerializeField] GameObject weaponSelectUI;
-
+    [SerializeField]float groundCheckDistance;
+    bool isGrounded;
+    //[SerializeField] LayerMask groundCheckMask;
+    [SerializeField] Text playerHpUI;
+    [SerializeField] RectTransform crosshair;
+    [SerializeField] GameObject deadCanvus;
 
 
     private void Start()
     {
         rigid = GetComponent<Rigidbody>();
-        bodyCol = GetComponent<CapsuleCollider>();//몸뚱이 콜라이더
-        headCol = GetComponent<BoxCollider>();//머리 콜라이더
+        
+        
 
         camTr = Camera.main.transform;//메인캠 달아주시고
         Cursor.lockState = CursorLockMode.Locked;//커서 고정
@@ -44,38 +49,84 @@ public class PlayerMovement : MonoBehaviour
             weapon = GetComponentInChildren<PlayerWeapon>();
         }
 
+        currentState = PlayerWeaponState.Pistol;
+        weapon.EquipWeapon(currentState);
+
     }
 
     private void Update()
     {
-        Move();
-        LookAround();
-        Jump();
-       
-       if(Input.GetMouseButtonDown(0))
+        if(alive == true)
         {
-            weapon.Fire1();
-        }
-        if (Input.GetKeyDown(KeyCode.Alpha1))
-        {
-            currentState = PlayerWeaponState.SMG;
-            weapon.EquipWeapon(currentState);
-        }
-        if (Input.GetKeyDown(KeyCode.Alpha2))
-        {
-            currentState = PlayerWeaponState.Shotgun;
-            weapon.EquipWeapon(currentState);
-        }
-        if(Input.GetKeyDown(KeyCode.R))
-        {
-            weapon.Reloading();
-        }
-        
+            Move();
+            LookAround();
+            Jump();
 
+            if (Input.GetMouseButtonDown(0))
+            {
+                weapon.Fire1();
+            }
+            if (Input.GetMouseButtonDown(1))
+            {
+                weapon.Fire2();
+            }
+            if (Input.GetKeyDown(KeyCode.Alpha1))
+            {
+                currentState = PlayerWeaponState.GravityGun;
+                weapon.EquipWeapon(currentState);
+            }
+            if (Input.GetKeyDown(KeyCode.Alpha2))
+            {
+                currentState = PlayerWeaponState.Pistol;
+                weapon.EquipWeapon(currentState);
+            }
+            if (Input.GetKeyDown(KeyCode.Alpha3))
+            {
+                currentState = PlayerWeaponState.Magnum;
+                weapon.EquipWeapon(currentState);
+            }
+
+            if (Input.GetKeyDown(KeyCode.Alpha4))
+            {
+                currentState = PlayerWeaponState.SMG;
+                weapon.EquipWeapon(currentState);
+            }
+            if (Input.GetKeyDown(KeyCode.Alpha5))
+            {
+                currentState = PlayerWeaponState.AR;
+                weapon.EquipWeapon(currentState);
+            }
+            if (Input.GetKeyDown(KeyCode.Alpha6))
+            {
+                currentState = PlayerWeaponState.Shotgun;
+                weapon.EquipWeapon(currentState);
+            }
+            if (Input.GetKeyDown(KeyCode.Alpha7))
+            {
+                currentState = PlayerWeaponState.Sniper;
+                weapon.EquipWeapon(currentState);
+            }
+
+            if (Input.GetKeyDown(KeyCode.R))
+            {
+                weapon.Reloading();
+            }
+            crosshair.position = Input.mousePosition;
+
+            playerHpUI.text = currentHp + "";
+
+            isGrounded = Physics.Raycast(transform.position, Vector3.down, groundCheckDistance);
+
+            if (isGrounded)
+            {
+                jumpCount = 1; // 바닥에 닿으면 점프 횟수 초기화
+            }
+        }
         
 
     }
 
+    
 
     void LookAround()
     {
@@ -106,30 +157,22 @@ public class PlayerMovement : MonoBehaviour
         if(Input.GetKeyDown(KeyCode.Space))
         {
             rigid.AddForce(Vector3.up * jumpPower, ForceMode.Impulse);
+            jumpCount--;
         }
     }
 
-    void Crouch()
-    {
-        if(Input.GetKeyDown(KeyCode.LeftControl))
-        {
-
-        }
-    }
-
-    void Attack1()
-    {
-       
-    }
+    
 
 
     public void ChangeHp(int damage)
     {
 
-        currentHp += damage;
+
+        currentHp -= damage;
         if(currentHp <= 0)
         {
-            dead = true;
+            currentHp = 0;
+            alive = false;
             Dead();
         }
         if(currentHp > maxHp)
@@ -140,9 +183,14 @@ public class PlayerMovement : MonoBehaviour
 
     public void Dead()
     {
-        if(dead == true)
+        if(alive == false)
         {
+            if(!deadCanvus.activeSelf) deadCanvus.SetActive(true);
 
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true;
+            weapon.gameObject.SetActive(false);
+            crosshair.gameObject.SetActive(false);
         }
     }
      

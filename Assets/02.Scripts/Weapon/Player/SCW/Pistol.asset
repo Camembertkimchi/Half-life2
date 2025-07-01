@@ -17,13 +17,13 @@ MonoBehaviour:
   WeaponName: Pistol
   damage: 15
   fireRate: 0.15
-  maxAmmo: 225
-  maxMag: 0
+  maxAmmo: 18
+  maxMag: 225
   state: 4
   weaponLoadOut: 1
   weaponType: 1
   ammoType: 1
-  acurracyMin: 0.03
-  acurracyMax: 0.08
-  spreadIncreaseRate: 0.01
-  spreadRecoveryRate: 0.05
+  acurracyMin: 0.005
+  acurracyMax: 0.01
+  spreadIncreaseRate: 0.0001
+  spreadRecoveryRate: 0.0005
