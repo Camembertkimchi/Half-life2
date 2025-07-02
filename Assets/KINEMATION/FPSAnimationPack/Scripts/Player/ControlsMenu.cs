@@ -50,7 +50,7 @@ namespace KINEMATION.FPSAnimationPack.Scripts.Player
         private void Update()
         {
             weaponText.SetText(_player.GetActivePrefab().name);
-            ammoLeftText.SetText(_player.GetActiveWeapon().activeAmmo.ToString());
+            ammoLeftText.SetText(_player.GetActiveWeapon().GetActiveAmmo().ToString());
             ammoTotalText.SetText(_player.GetActiveWeapon().weaponSettings.ammo.ToString());
             fireModeText.SetText(_player.GetActiveWeapon().ActiveFireMode.ToString());
             

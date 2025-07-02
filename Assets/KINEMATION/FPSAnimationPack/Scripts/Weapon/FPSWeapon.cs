@@ -8,7 +8,8 @@ using UnityEngine;
 
 namespace KINEMATION.FPSAnimationPack.Scripts.Weapon
 {
-    public class FPSWeapon : MonoBehaviour
+    [AddComponentMenu("KINEMATION/FPS Animation Pack/Weapon/FPS Weapon")]
+    public class FPSWeapon : MonoBehaviour, IAmmoProvider
     {
         public float UnEquipDelay => unEquipDelay;
         public FireMode ActiveFireMode => fireMode;
@@ -42,7 +43,7 @@ namespace KINEMATION.FPSAnimationPack.Scripts.Weapon
         protected float emptyReloadDelay;
         protected float tacReloadDelay;
 
-        public int activeAmmo;
+        protected int _activeAmmo;
         
         protected bool _isReloading;
         protected bool _isFiring;
@@ -55,7 +56,7 @@ namespace KINEMATION.FPSAnimationPack.Scripts.Weapon
             recoilAnimation = owner.GetComponent<RecoilAnimation>();
             characterAnimator = owner.GetComponent<Animator>();
 
-            activeAmmo = weaponSettings.ammo;
+            _activeAmmo = weaponSettings.ammo;
 
             weaponAnimator = GetComponentInChildren<Animator>();
             if (weaponAnimator == null)
@@ -106,13 +107,14 @@ namespace KINEMATION.FPSAnimationPack.Scripts.Weapon
 
         public virtual void OnReload()
         {
-            if (activeAmmo == weaponSettings.ammo) return;
+            if (_activeAmmo == weaponSettings.ammo) return;
             
-            var reloadHash = activeAmmo == 0 ? RELOAD_EMPTY : RELOAD_TAC;
+            var reloadHash = _activeAmmo == 0 ? RELOAD_EMPTY : RELOAD_TAC;
             characterAnimator.Play(reloadHash, -1, 0f);
             weaponAnimator.Play(reloadHash, -1, 0f);
-            
-            Invoke(nameof(ResetActiveAmmo), activeAmmo == 0 ? emptyReloadDelay : tacReloadDelay);
+
+            float delay = _activeAmmo == 0 ? emptyReloadDelay : tacReloadDelay;
+            Invoke(nameof(ResetActiveAmmo), delay * weaponSettings.ammoResetTimeScale);
             _isReloading = true;
         }
 
@@ -171,7 +173,7 @@ namespace KINEMATION.FPSAnimationPack.Scripts.Weapon
         {
             if (!_isFiring || _isReloading) return;
 
-            if (activeAmmo == 0)
+            if (_activeAmmo == 0)
             {
                 OnFireReleased();
                 return;
@@ -182,11 +184,11 @@ namespace KINEMATION.FPSAnimationPack.Scripts.Weapon
             if (cameraAnimator != null) cameraAnimator.PlayCameraShake(weaponSettings.cameraShake);
 
             if (weaponSettings.useFireClip) characterAnimator.Play(FIRE, -1, 0f);
-            weaponAnimator.Play(weaponSettings.hasFireOut && activeAmmo == 1
+            weaponAnimator.Play(weaponSettings.hasFireOut && _activeAmmo == 1
                 ? FIREOUT
                 : FIRE, -1, 0f);
 
-            activeAmmo--;
+            _activeAmmo--;
             
             if (fireMode == FireMode.Semi) return;
             Invoke(nameof(OnFire), 60f / weaponSettings.fireRate);
@@ -194,8 +196,18 @@ namespace KINEMATION.FPSAnimationPack.Scripts.Weapon
 
         protected void ResetActiveAmmo()
         {
-            activeAmmo = weaponSettings.ammo;
+            _activeAmmo = weaponSettings.ammo;
             _isReloading = false;
+        }
+
+        public int GetActiveAmmo()
+        {
+            return _activeAmmo;
+        }
+
+        public int GetMaxAmmo()
+        {
+            return weaponSettings.ammo;
         }
     }
 }

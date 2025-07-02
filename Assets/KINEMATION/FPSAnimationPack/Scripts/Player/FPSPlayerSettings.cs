@@ -8,6 +8,9 @@ namespace KINEMATION.FPSAnimationPack.Scripts.Player
     [CreateAssetMenu(fileName = "NewPlayerSettings", menuName = "KINEMATION/FPS Animation Pack/FPS Player Settings")]
     public class FPSPlayerSettings : ScriptableObject
     {
+        [Header("Controls")]
+        [Min(0f)] public float sensitivity = 1f;
+        
         public List<GameObject> weaponPrefabs;
         public float grenadeDelay = 0f;
         public float gaitSmoothing = 0f;

@@ -6,6 +6,7 @@ using UnityEngine;
 
 namespace KINEMATION.FPSAnimationPack.Scripts.Camera
 {
+    [AddComponentMenu("KINEMATION/FPS Animation Pack/FPS Camera Animator")]
     public class FPSCameraAnimator : MonoBehaviour
     {
         [SerializeField] private Transform cameraBone;
@@ -69,9 +70,9 @@ namespace KINEMATION.FPSAnimationPack.Scripts.Camera
             _baseFov = _camera.fieldOfView;
         }
 
-        private void Update()
+        private void LateUpdate()
         {
-            transform.rotation = transform.root.rotation * cameraBone.localRotation;
+            transform.localRotation = _player.transform.localRotation * cameraBone.localRotation;
             UpdateCameraShake();
             UpdateFOV();
         }

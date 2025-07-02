@@ -5,6 +5,7 @@ using UnityEngine;
 
 namespace KINEMATION.FPSAnimationPack.Scripts.Weapon
 {
+    [AddComponentMenu("KINEMATION/FPS Animation Pack/Weapon/FPS Bone Visibility")]
     public class FPSBoneVisibility : MonoBehaviour
     {
         [SerializeField] private List<Transform> defaultBonesToHide;

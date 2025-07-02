@@ -27,6 +27,7 @@ namespace KINEMATION.FPSAnimationPack.Scripts.Weapon
         [Min(0f)] public float fireRate = 600f;
         [Min(1)] public int ammo = 1;
         [Min(0f)] public float aimFov = 70f;
+        [Min(0f)] public float ammoResetTimeScale = 1f;
         public bool fullAuto;
         public bool useFireClip;
         public bool hasEquipOverride;

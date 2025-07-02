@@ -11,24 +11,24 @@ public interface IEnemyWeapon
     Weapons Type { get; set; }
      
 }
-public interface IEnemyState
+public enum AIState
 {
-    void EnterState(EnemyAI enemy);
-    void ExitState();
-    void UpdateState();
-
+    Patrol = 0, //순찰
+    Chase, //추격
+    Cover, //엄폐
+    Attack, //발포
+    Search, //탐색(플레이어를 놓칠 경우)
+    Reload //장전
 }
 
 public class EnemyAI : MonoBehaviour
 {
+    public AIState currentState = AIState.Patrol;
     [SerializeField] GameObject weapon;//무기
     IEnemyWeapon currentWeapon;
-    
     [SerializeField] int hp;
     NavMeshAgent agent;
     [SerializeField]static readonly WaitForSeconds reloadDelay = new WaitForSeconds(3.3f);
-    [SerializeField] int maxAttackTime = 5;
-    [SerializeField] int currentAttackTime;
     [SerializeField] Animator anim;
     Rigidbody rb;
     public bool NowReloading
@@ -39,11 +39,9 @@ public class EnemyAI : MonoBehaviour
     {
         get; set;
     }
-
     bool alive = true;
-    IEnemyState state;
-
     #region 시야각
+    [Header("시야각")]
     [Range(0f,360f)] [SerializeField] float viewAngle; //보는 각도
     [SerializeField] float viewRadius; //보는 길이
     [SerializeField] LayerMask targetMask; //플레이어
@@ -55,15 +53,34 @@ public class EnemyAI : MonoBehaviour
     [SerializeField] bool foundPlayer;
     [SerializeField] Vector3 lastPlayerTransform;
     #endregion
-
-    IEnumerator currentCor;
-
+    [Header("공격")]
+    [SerializeField] private float attackRange = 7f;
+    [SerializeField] private int currentAttackTime;
+    [SerializeField] int maxAttackTime = 5;
+    [SerializeField] bool reloading;
+    [Header("총기 발사 횟수")]
     [SerializeField] int smgFireTimes = 2;
     [SerializeField] int arFireTimes = 4;
     [SerializeField] int pistolFireTimes = 5;
     [SerializeField] int shotgunFireTimes = 3;
-
-
+    //순찰
+    [Header("순찰")]
+    [SerializeField]private Transform[] patrolPoints;
+    private int currentPatrolIndex = 0;
+    [SerializeField]private float patrolPointThreshold = 1f;
+    [Header("엄폐")]
+    [SerializeField] private float minCoverDistance = 3f; //엄폐 지점 최소 거리
+    [SerializeField] private float maxCoverDistance = 10f;// " 최대 거리
+    [SerializeField] private LayerMask coverPointMask; //엄폐 레이어
+    private Vector3 currentCoverPos;
+    [SerializeField] private float coverSearchRadius = 20f; //엄폐 지점 검색 반경
+    [SerializeField] private float timeInCover = 2f; //엄폐 유지 시간
+    //최적화
+    private Collider[] wallCols = new Collider[10];
+    private Collider[] targetCols = new Collider[10];
+    private const float MIN_DISTANCE_TO_STOP = 0.5f;
+    private IEnumerator currentAICor;
+    IEnumerator currentCor;
 
     //이 두 프로퍼티는 GetComponemtFromParent<EnemyAI>()로 가져와서 써보셈 되면 ㄱㄱ
     public bool AliveState
@@ -76,6 +93,93 @@ public class EnemyAI : MonoBehaviour
         set { currentAttackTime = value; }
     }
 
+    private void SetAIState(AIState newState)
+    {
+        if (currentState == newState) return;
+        if (currentAICor != null)
+        {
+            StopCoroutine(currentAICor);
+        }
+        currentState = newState;
+        Debug.Log($"봇 상태 변경: {currentState}");
+        
+        switch (currentState)
+        {
+
+        }
+    }
+    #region 상태 - 순찰
+    private IEnumerator PatrolRoutine()
+    {
+        anim.SetBool("Running", true);
+        agent.isStopped = false;
+        while (currentState == AIState.Patrol)
+        {
+            if (foundPlayer == true)
+            {
+                SetAIState(AIState.Chase);
+                yield break;
+            }
+
+            if (patrolPoints.Length == 0)
+            {
+                Debug.LogWarning("순찰 지점 설정 안됨!");
+                anim.SetBool("Running", false);
+                agent.isStopped = true;
+                yield break;
+            }
+
+            //순찰 지점 이동
+            Vector3 targetPatrolPos = patrolPoints[currentPatrolIndex].position;
+            agent.SetDestination(targetPatrolPos);
+
+            //순찰 지점 도달 확인
+            if (!agent.pathPending && agent.remainingDistance < patrolPointThreshold)
+            {
+                currentPatrolIndex = (currentPatrolIndex + 1) % patrolPoints.Length; //다음 지점
+                yield return new WaitForSeconds(1f);
+            }
+            yield return null;
+        }
+    }
+    #endregion
+    #region 상태 - 추격
+    private IEnumerator ChaseRoutine()
+    {
+        anim.SetBool("Running", true);
+        agent.isStopped = false;
+
+        while (currentState == AIState.Chase)
+        {
+            if (!foundPlayer)
+            {
+                SetAIState(AIState.Search); yield break;
+            }
+
+            if (Vector3.Distance(transform.position, lastPlayerTransform) <= attackRange)
+            {
+                SetAIState(AIState.Attack); yield break;
+            }
+
+        }
+    }
+
+
+    #endregion
+
+
+
+    private bool NeedToReload()
+    {
+        if (currentAttackTime <= 0)
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
     private void OnEnable()
     {
         if(weapon != null)
@@ -110,18 +214,26 @@ public class EnemyAI : MonoBehaviour
             Debug.Log("무기 못읽음");
            
         }
-        agent = GetComponent<NavMeshAgent>();
-        anim = GetComponent<Animator>();
-        rb = GetComponent<Rigidbody>();
-
+        if (agent == null)
+        {
+            agent = GetComponent<NavMeshAgent>();
+        }
+        if (anim == null)
+        {
+            anim = GetComponent<Animator>();
+        }
+        if (rb == null)
+        {
+            rb = GetComponent<Rigidbody>();
+        }
     }
 
-    private void Update()
+    private void FixedUpdate()
     {
         if(alive == true)
         {
             Viewing();
-            if (targetList.Count > 0)
+            if (foundPlayer == true)
             {
                 LookAtPlayer(targetList[0].transform); // 감지된 플레이어 바라보기
             }
@@ -166,7 +278,7 @@ public class EnemyAI : MonoBehaviour
     {
         if(currentAttackTime != maxAttackTime)
         {
-            StartCoroutine("Hiding");
+            StartCoroutine(Hiding());
             yield return new WaitUntil(() => NowHiding == false);
             anim.SetBool("Running", false);
             anim.SetBool("Reload", true);
@@ -186,22 +298,40 @@ public class EnemyAI : MonoBehaviour
     {
         //아무튼 숨는 로직
         //앞이 벽이다 = 숨었다! else 벽이 주변에 없다!
-        Collider[] walls = Physics.OverlapSphere(transform.position, 4, ObstacleMask);
+        yield return new WaitForSeconds(UnityEngine.Random.Range(0f, 0.1f));//동시 실행으로 과부하 방지
+        int walls = Physics.OverlapSphereNonAlloc(transform.position, 4, wallCols, ObstacleMask);
         //Transform lastPos = transform;
 
-        if (walls.Length > 0)
+        if (walls > 0)
         {
-            Transform wall = walls[0].transform;
+            Transform wall = wallCols[0].transform;
 
             Vector3 directionToPlayer = (lastPlayerTransform - wall.position).normalized;
-            Vector3 hidePos = wall.position - directionToPlayer;
-
-            agent.SetDestination(hidePos);
-            anim.SetBool("Running", true);
-            NowHiding = false;
+            Vector3 potentialPos = wall.position - directionToPlayer * 2f;
+            NavMeshHit hit;
+            if (NavMesh.SamplePosition(potentialPos, out hit, 5f, NavMesh.AllAreas))
+            {
+                Vector3 hidePos = hit.position;
+                agent.SetDestination(hidePos);
+                anim.SetBool("Running", true);
+                yield return new WaitUntil(() => 
+                (!agent.pathPending && agent.remainingDistance <= agent.stoppingDistance + 0.1f && agent.velocity.sqrMagnitude < 0.1f));
+                //길찾기 끝남/남은 거리가 stoppingDistance정도?, 속도가 정지한 수준?
+                agent.ResetPath();
+                NowHiding = false;
+                Debug.Log("잘 숨었다");
+            }
+            else
+            {
+                Debug.LogWarning("유효 공간 찾기 실패");
+                anim.SetBool("Running", false);
+                NowHiding = false;
+            }
         }
         else
         {
+            Debug.LogWarning("숨을 곳은 없네");
+            anim.SetBool("Running", false);
             NowHiding = false;
         }
         yield return new WaitUntil(() => NowReloading == false);

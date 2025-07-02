@@ -6,6 +6,7 @@ using UnityEngine;
 
 namespace KINEMATION.FPSAnimationPack.Scripts.Weapon
 {
+    [AddComponentMenu("KINEMATION/FPS Animation Pack/Weapon/Machine Gun")]
     public class FPSMachineGun : FPSWeapon
     {
         [SerializeField] private List<Transform> gunTape;
@@ -22,11 +23,11 @@ namespace KINEMATION.FPSAnimationPack.Scripts.Weapon
         private void LateUpdate()
         {
             int count = gunTape.Count;
-            if (activeAmmo > count) return;
+            if (_activeAmmo > count) return;
 
             for (int i = 0; i < count; i++)
             {
-                if(i > count - activeAmmo) continue;
+                if(i > count - _activeAmmo) continue;
                 
                 KTransform childWorldTransform = KTransform.Identity;
                 if (i < count - 1)
@@ -46,14 +47,14 @@ namespace KINEMATION.FPSAnimationPack.Scripts.Weapon
 
         public override void OnReload()
         {
-            if (activeAmmo == weaponSettings.ammo) return;
+            if (_activeAmmo == weaponSettings.ammo) return;
             
-            var reloadHash = activeAmmo == 0 ? RELOAD_EMPTY : activeAmmo > gunTape.Count ? RELOAD_TAC : RELOAD_TAPE;
+            var reloadHash = _activeAmmo == 0 ? RELOAD_EMPTY : _activeAmmo > gunTape.Count ? RELOAD_TAC : RELOAD_TAPE;
             characterAnimator.Play(reloadHash, -1, 0f);
             weaponAnimator.Play(reloadHash, -1, 0f);
 
-            float delay = activeAmmo > gunTape.Count ? tacReloadDelay : tapeResetTime;
-            Invoke(nameof(ResetActiveAmmo), delay);
+            float delay = _activeAmmo > gunTape.Count ? tacReloadDelay : tapeResetTime;
+            Invoke(nameof(ResetActiveAmmo), delay * weaponSettings.ammoResetTimeScale);
             _isReloading = true;
         }
     }

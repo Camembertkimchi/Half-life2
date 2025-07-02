@@ -5,6 +5,7 @@ using UnityEngine;
 
 namespace KINEMATION.FPSAnimationPack.Scripts.Sounds
 {
+    [AddComponentMenu("KINEMATION/FPS Animation Pack/Weapon/FPS Weapon Sound")]
     public class FPSWeaponSound : MonoBehaviour
     {
         private FPSWeaponSettings _settings;

@@ -7,7 +7,7 @@ using KINEMATION.KAnimationCore.Runtime.Core;
 
 using System;
 using System.Collections.Generic;
-
+using KINEMATION.FPSAnimationPack.Scripts.Camera;
 using UnityEngine;
 using Quaternion = UnityEngine.Quaternion;
 using Vector2 = UnityEngine.Vector2;
@@ -27,6 +27,7 @@ namespace KINEMATION.FPSAnimationPack.Scripts.Player
         public Transform root;
     }
     
+    [AddComponentMenu("KINEMATION/FPS Animation Pack/Character/FPS Player")]
     public class FPSPlayer : MonoBehaviour
     {
         public float AdsWeight => _adsWeight;
@@ -59,6 +60,7 @@ namespace KINEMATION.FPSAnimationPack.Scripts.Player
         private static int THROW_GRENADE = Animator.StringToHash("ThrowGrenade");
         private static int GAIT = Animator.StringToHash("Gait");
         private static int IS_IN_AIR = Animator.StringToHash("IsInAir");
+        private static int INSPECT = Animator.StringToHash("Inspect");
 
         private static Quaternion ANIMATED_OFFSET = Quaternion.Euler(90f, 0f, 0f);
 
@@ -71,6 +73,8 @@ namespace KINEMATION.FPSAnimationPack.Scripts.Player
         private Vector2 _moveInput;
         private float _smoothGait;
 
+        private Vector2 _lookInput;
+
         private bool _bSprinting;
         private bool _bTacSprinting;
 
@@ -80,6 +84,9 @@ namespace KINEMATION.FPSAnimationPack.Scripts.Player
         private KTransform _ikMotion = KTransform.Identity;
         private KTransform _cachedIkMotion = KTransform.Identity;
         private IKMotion _activeMotion;
+
+        private KTransform _localCameraPoint;
+        private CharacterController _controller;
         
         private void EquipWeapon_Incremental()
         {
@@ -143,6 +150,11 @@ namespace KINEMATION.FPSAnimationPack.Scripts.Player
             Invoke(nameof(OnLand), 0.4f);
         }
         
+        public void OnInspect()
+        {
+            _animator.CrossFade(INSPECT, 0.1f);
+        }
+        
 #if ENABLE_INPUT_SYSTEM
         public void OnMouseWheel(InputValue value)
         {
@@ -200,9 +212,27 @@ namespace KINEMATION.FPSAnimationPack.Scripts.Player
             if (!_bSprinting) return;
             _bTacSprinting = value.isPressed;
         }
+
+        public void OnLook(InputValue value)
+        {
+            Vector2 input = value.Get<Vector2>() * playerSettings.sensitivity;
+            _lookInput.y = Mathf.Clamp(_lookInput.y - input.y, -90f, 90f);
+            _lookInput.x = input.x;
+        }
 #endif
-        
 #if !ENABLE_INPUT_SYSTEM
+        private void OnLookLegacy()
+        {
+            Vector2 input = new Vector2()
+            {
+                x = Input.GetAxis("Horizontal"),
+                y = Input.GetAxis("Vertical")
+            };
+            
+            _lookInput.y = Mathf.Clamp(_lookInput.y + input.y, -90f, 90f);
+            _lookInput.x = input.x;
+        }
+
         private void OnMouseWheelLegacy()
         {
             float mouseWheelValue = Input.GetAxis("Mouse ScrollWheel");
@@ -253,17 +283,19 @@ namespace KINEMATION.FPSAnimationPack.Scripts.Player
         private void ProcessLegacyInputs()
         {
             OnMouseWheelLegacy();
-            if(Input.GetKeyDown(KeyCode.G)) OnThrowGrenade();
-            if(Input.GetKeyDown(KeyCode.F)) OnChangeWeapon();
-            if(Input.GetKeyDown(KeyCode.B)) OnChangeFireMode();
-            if(Input.GetKeyDown(KeyCode.R)) OnReload();
+            if (Input.GetKeyDown(KeyCode.G)) OnThrowGrenade();
+            if (Input.GetKeyDown(KeyCode.F)) OnChangeWeapon();
+            if (Input.GetKeyDown(KeyCode.B)) OnChangeFireMode();
+            if (Input.GetKeyDown(KeyCode.R)) OnReload();
             if (Input.GetKeyDown(KeyCode.Space)) OnJump();
+            if (Input.GetKeyDown(KeyCode.I)) OnInspect();
             
-            if(Input.GetKeyDown(KeyCode.Mouse0)) GetActiveWeapon().OnFirePressed();
-            if(Input.GetKeyUp(KeyCode.Mouse0)) GetActiveWeapon().OnFireReleased();
+            if (Input.GetKeyDown(KeyCode.Mouse0)) GetActiveWeapon().OnFirePressed();
+            if (Input.GetKeyUp(KeyCode.Mouse0)) GetActiveWeapon().OnFireReleased();
 
             OnAimLegacy(Input.GetKey(KeyCode.Mouse1));
             OnMoveLegacy();
+            OnLookLegacy();
             OnSprintLegacy(Input.GetKey(KeyCode.LeftShift));
             OnTacSprintLegacy(Input.GetKey(KeyCode.X));
         }
@@ -286,6 +318,7 @@ namespace KINEMATION.FPSAnimationPack.Scripts.Player
         private void Start()
         {
             _animator = GetComponent<Animator>();
+            _controller = transform.root.GetComponent<CharacterController>();
             _recoilAnimation = GetComponent<RecoilAnimation>();
             _playerSound = GetComponent<FPSPlayerSound>();
             
@@ -293,8 +326,8 @@ namespace KINEMATION.FPSAnimationPack.Scripts.Player
             _rightHandLayerIndex = _animator.GetLayerIndex("RightHand");
             _tacSprintLayerIndex = _animator.GetLayerIndex("TacSprint");
             
-            KTransform root = new KTransform(transform.root);
-            var localCamera = root.GetRelativeTransform(new KTransform(cameraPoint), false);
+            KTransform root = new KTransform(transform);
+            _localCameraPoint = root.GetRelativeTransform(new KTransform(cameraPoint), false);
 
             foreach (var prefab in playerSettings.weaponPrefabs)
             {
@@ -316,7 +349,7 @@ namespace KINEMATION.FPSAnimationPack.Scripts.Player
 
                 localWeapon.rotation *= ANIMATED_OFFSET;
                 
-                component.adsPose.position = localCamera.position - localWeapon.position;
+                component.adsPose.position = _localCameraPoint.position - localWeapon.position;
                 component.adsPose.rotation = Quaternion.Inverse(localWeapon.rotation);
 
                 _weapons.Add(component);
@@ -352,6 +385,20 @@ namespace KINEMATION.FPSAnimationPack.Scripts.Player
                 triggerAllowed ? _animator.GetFloat(TAC_SPRINT_WEIGHT) : 0f);
 
             _animator.SetLayerWeight(_rightHandLayerIndex, _animator.GetFloat(RIGHT_HAND_WEIGHT));
+            
+            Vector3 cameraPosition = -_localCameraPoint.position;
+            
+            transform.localRotation = Quaternion.Euler(_lookInput.y, 0f, 0f);
+            transform.localPosition = transform.localRotation * cameraPosition - cameraPosition;
+
+            if (_controller != null)
+            {
+                Transform root = _controller.transform;
+                root.rotation *= Quaternion.Euler(0f, _lookInput.x, 0f);
+                Vector3 movement = root.forward * _moveInput.y + root.right * _moveInput.x;
+                movement *= _smoothGait * 1.5f;
+                _controller.Move(movement * Time.deltaTime);
+            }
         }
 
         private void SetupIkData(ref KTwoBoneIkData ikData, in KTransform target, in IKTransforms transforms, 
@@ -377,7 +424,7 @@ namespace KINEMATION.FPSAnimationPack.Scripts.Player
         
         private void ProcessOffsets(ref KTransform weaponT)
         {
-            var root = transform.root;
+            var root = transform;
             KTransform rootT = new KTransform(root);
             var weaponOffset = GetActiveWeapon().weaponSettings.ikOffset;
 
@@ -424,16 +471,18 @@ namespace KINEMATION.FPSAnimationPack.Scripts.Player
             aimPoint.position -= GetActiveWeapon().weaponSettings.aimPointOffset;
             aimPoint.rotation = Quaternion.Inverse(weaponBone.rotation) * GetActiveWeapon().aimPoint.rotation;
             
-            KTransform root = new KTransform(transform.root);
+            KTransform root = new KTransform(transform);
             adsPose.position = KAnimationMath.MoveInSpace(root, adsPose,
                 GetActiveWeapon().adsPose.position - weaponOffset, 1f);
             adsPose.rotation =
                 KAnimationMath.RotateInSpace(root, adsPose, 
                     GetActiveWeapon().adsPose.rotation, 1f);
 
+            KTransform cameraPose = root.GetWorldTransform(_localCameraPoint, false);
+
             float adsBlendWeight = GetActiveWeapon().weaponSettings.adsBlend;
-            adsPose.position = Vector3.Lerp(cameraPoint.position, adsPose.position, adsBlendWeight);
-            adsPose.rotation = Quaternion.Slerp(cameraPoint.rotation, adsPose.rotation, adsBlendWeight);
+            adsPose.position = Vector3.Lerp(cameraPose.position, adsPose.position, adsBlendWeight);
+            adsPose.rotation = Quaternion.Slerp(cameraPose.rotation, adsPose.rotation, adsBlendWeight);
 
             adsPose.position = KAnimationMath.MoveInSpace(root, adsPose, aimPoint.rotation * aimPoint.position, 1f);
             adsPose.rotation = KAnimationMath.RotateInSpace(root, adsPose, aimPoint.rotation, 1f);
@@ -486,14 +535,14 @@ namespace KINEMATION.FPSAnimationPack.Scripts.Player
                     _ikMotionPlayBack / _activeMotion.blendTime);
             }
 
-            var root = new KTransform(transform.root);
+            var root = new KTransform(transform);
             weaponT.position = KAnimationMath.MoveInSpace(root, weaponT, _ikMotion.position, 1f);
             weaponT.rotation = KAnimationMath.RotateInSpace(root, weaponT, _ikMotion.rotation, 1f);
         }
 
         private void LateUpdate()
         {
-            KAnimationMath.RotateInSpace(transform.root, rightHand.tip,
+            KAnimationMath.RotateInSpace(transform, rightHand.tip,
                 GetActiveWeapon().weaponSettings.rightHandSprintOffset, _animator.GetFloat(TAC_SPRINT_WEIGHT));
             
             KTransform weaponTransform = GetWeaponPose();

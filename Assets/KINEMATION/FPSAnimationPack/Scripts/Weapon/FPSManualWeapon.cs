@@ -4,6 +4,7 @@ using UnityEngine;
 
 namespace KINEMATION.FPSAnimationPack.Scripts.Weapon
 {
+    [AddComponentMenu("KINEMATION/FPS Animation Pack/Weapon/Manual Weapon")]
     public class FPSManualWeapon : FPSWeapon
     {
         private static int RELOAD_START = Animator.StringToHash("Reload_Start");
@@ -41,13 +42,13 @@ namespace KINEMATION.FPSAnimationPack.Scripts.Weapon
 
         public void OnReloadLoop()
         {
-            if (activeAmmo == weaponSettings.ammo)
+            if (_activeAmmo == weaponSettings.ammo)
             {
                 OnReloadEnd();
                 return;
             }
 
-            activeAmmo++;
+            _activeAmmo++;
             
             characterAnimator.CrossFade(RELOAD_LOOP, 0.1f, -1, 0f, 0f);
             weaponAnimator.Play(RELOAD_LOOP, -1, 0f);

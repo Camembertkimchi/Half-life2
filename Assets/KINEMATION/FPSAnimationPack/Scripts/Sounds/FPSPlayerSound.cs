@@ -7,6 +7,7 @@ using Random = UnityEngine.Random;
 
 namespace KINEMATION.FPSAnimationPack.Scripts.Sounds
 {
+    [AddComponentMenu("KINEMATION/FPS Animation Pack/Character/FPS Player Sound")]
     public class FPSPlayerSound : MonoBehaviour
     {
         [Header("Weapon swapping")]
