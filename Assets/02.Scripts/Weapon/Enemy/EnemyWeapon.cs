@@ -5,7 +5,7 @@ using UnityEngine;
 
 public class EnemyWeapon : MonoBehaviour, IEnemyWeapon
 {
-    [SerializeField] ScriptableWeapon weaponInfo;
+    public ScriptableWeapon weaponInfo;
     EnemyAI enemyAI;
     [SerializeField] Transform muzzlePos;
     [SerializeField] int fireTimes;//현재 주기
@@ -65,14 +65,10 @@ public class EnemyWeapon : MonoBehaviour, IEnemyWeapon
                 
                 if (type == Weapons.Shotgun)
                 {
-
-                    
                     for(int i = 0; i < 12;  i++)
                     {
                         randomSpread.x = Random.Range(-accuracy * 0.5f, accuracy * 0.5f);
                         randomSpread.y = Random.Range((-accuracy + 0.5f) * 0.2f, (accuracy - 0.5f) * 0.2f);
-
-                        
 
                         weaponInfo.bullet = pool.GetBullet();
                         weaponInfo.bullet.transform.position = muzzlePos.position;
@@ -89,7 +85,6 @@ public class EnemyWeapon : MonoBehaviour, IEnemyWeapon
                 {
                     randomSpread.x = Random.Range(-accuracy * 0.5f, accuracy * 0.5f);
                     randomSpread.y = Random.Range((-accuracy + 0.5f) * 0.2f, (accuracy - 0.5f) * 0.2f);
-
 
                     weaponInfo.bullet = pool.GetBullet();
                     weaponInfo.bullet.transform.position = muzzlePos.position;

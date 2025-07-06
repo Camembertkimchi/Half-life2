@@ -166,7 +166,29 @@ public class EnemyAI : MonoBehaviour
 
 
     #endregion
-
+    #region 상태 - 공격
+    private IEnumerator AttackRountine()
+    {
+        anim.SetBool("Running", false);
+        agent.isStopped = true;
+        while(currentState == AIState.Attack)
+        {
+            if (!foundPlayer || Vector3.Distance(transform.position, lastPlayerTransform) > attackRange + 1f)
+            {
+                SetAIState(AIState.Chase);
+                yield break;
+            }
+            if (NeedToReload())
+            {
+                SetAIState(AIState.Reload); yield break;
+            }
+            //플레이어 바라보기
+            LookAtPlayer(lastPlayerTransform);
+            currentWeapon.FireWeapon();
+           // yield return new WaitForSeconds(currentWeapon.
+        }
+    }
+    #endregion
 
 
     private bool NeedToReload()
@@ -235,7 +257,7 @@ public class EnemyAI : MonoBehaviour
             Viewing();
             if (foundPlayer == true)
             {
-                LookAtPlayer(targetList[0].transform); // 감지된 플레이어 바라보기
+                LookAtPlayer(targetList[0].transform.position); // 감지된 플레이어 바라보기
             }
             else if (foundPlayer == true)
             {
@@ -434,9 +456,9 @@ public class EnemyAI : MonoBehaviour
         return new Vector3(Mathf.Sin(radian), 0f, Mathf.Cos(radian));
     }
 
-    void LookAtPlayer(Transform player)
+    void LookAtPlayer(Vector3 playerPos)
     {
-        Vector3 direction = (player.position - transform.position).normalized;
+        Vector3 direction = (playerPos - transform.position).normalized;
         direction.y = 0; // 고개 숙이는 걸 방지 (회전은 수평 방향만)
 
         targetRotation = Quaternion.LookRotation(direction);
