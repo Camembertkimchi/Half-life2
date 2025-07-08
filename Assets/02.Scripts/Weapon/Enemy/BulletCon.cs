@@ -6,7 +6,7 @@ using UnityEngine;
 public class BulletCon : MonoBehaviour
 {
     [SerializeField] float bulletSpeed = 20f;
-    [SerializeField]int damage;
+    [SerializeField] int damage;
     BulletPooling bulletPool;
     [SerializeField]bool isReleased = false;
     static readonly WaitForSeconds bulletReleaseTime = new WaitForSeconds(2f);

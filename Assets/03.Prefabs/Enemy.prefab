@@ -177,11 +177,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 614aa3864332bf94bbb758ca64a4cf88, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  currentState: 6
   weapon: {fileID: 5396316586498329160}
   hp: 200
-  maxAttackTime: 5
-  currentAttackTime: 0
-  anim: {fileID: 0}
+  alive: 1
   viewAngle: 160
   viewRadius: 20
   targetMask:
@@ -195,10 +194,25 @@ MonoBehaviour:
   rotationSpeed: 10
   foundPlayer: 0
   lastPlayerTransform: {x: 0, y: 0, z: 0}
+  playerInSightThisFrame: 0
+  attackRange: 7
+  currentAttackTime: 0
+  maxAttackTime: 5
+  reloading: 0
   smgFireTimes: 2
   arFireTimes: 4
   pistolFireTimes: 5
   shotgunFireTimes: 3
+  patrolPoints: []
+  patrolPointThreshold: 1
+  searchTimer: 0
+  minCoverDistance: 3
+  maxCoverDistance: 10
+  coverPointMask:
+    serializedVersion: 2
+    m_Bits: 1024
+  coverSearchRadius: 20
+  timeInCover: 2
 --- !u!1 &4638531257305093091
 GameObject:
   m_ObjectHideFlags: 0
@@ -333,6 +347,7 @@ MonoBehaviour:
   muzzlePos: {fileID: 3111237731238953646}
   fireTimes: 0
   maxFireTimes: 0
+  type: 0
   pool: {fileID: 0}
 --- !u!1 &5542576602366231404
 GameObject:
