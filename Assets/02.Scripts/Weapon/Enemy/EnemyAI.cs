@@ -18,6 +18,9 @@ public enum AIState
 
 public class EnemyAI : MonoBehaviour
 {
+    //HideInInspector = 그냥 에디터상에서 깔끔하게 유지하기 위한 것
+    //NonSerialized = 직렬화 막기, 씬 저장시 함께 저장되거나 불러와지지 않도록 할 때 사용.
+    //마찬가지로 사용은 안됨. 동적 생성 참조 계산되야할 캐시된 값 등등에 사용
     public AIState currentState = AIState.Patrol;
     [SerializeField] GameObject weapon;//무기
     [NonSerialized] EnemyWeapon currentWeapon;
@@ -65,12 +68,12 @@ public class EnemyAI : MonoBehaviour
     [SerializeField] private float patrolPointThreshold = 1f;
     [SerializeField] private float searchTimer;
     [Header("엄폐")]
-    [SerializeField] private float minCoverDistance = 3f; //엄폐 지점 최소 거리
-    [SerializeField] private float maxCoverDistance = 10f;// " 최대 거리
+    //[SerializeField] private float minCoverDistance = 3f; //엄폐 지점 최소 거리
+    //[SerializeField] private float maxCoverDistance = 10f;// " 최대 거리
     [SerializeField] private LayerMask coverPointMask; //엄폐 레이어
     private Vector3 currentCoverPos;
     [SerializeField] private float coverSearchRadius = 20f; //엄폐 지점 검색 반경
-    [SerializeField] private float timeInCover = 2f; //엄폐 유지 시간
+    [SerializeField] private float timeInCover = 5f; //엄폐 유지 시간
     //최적화
     private Collider[] wallCols = new Collider[10];
     private Collider[] targetCols = new Collider[10];
@@ -90,21 +93,21 @@ public class EnemyAI : MonoBehaviour
     }
     public int MaxAttackTime
     {
-        get; private set;
+        get
+        {
+            return maxAttackTime;
+        }
     }
 
     private void SetAIState(AIState newState)
     {
         if (currentState == newState || !alive) return;
-        if (currentAICor != null)
-        {
-            StopCoroutine(currentAICor);
-        }
+        StopAllCoroutines();
         currentState = newState;
-        Debug.Log($"봇 상태 변경: {currentState}");
-        
         switch (currentState)
         {
+            //!NowReloading을 붙이지 않아도 시작 부분에서 제어하는 것이 효과적!
+            //애초에 역할은 상태 전환만 하면 된다.
             case AIState.Patrol:
                 currentAICor = StartCoroutine(PatrolRoutine());
                 break;
@@ -124,10 +127,16 @@ public class EnemyAI : MonoBehaviour
                 currentAICor = StartCoroutine(ReloadRoutine());
                 break;
         }
+        Debug.Log($"봇 상태 변경: {currentState}");
     }
     #region 상태 - 순찰
     private IEnumerator PatrolRoutine()
     {
+        if (NowReloading)
+        {
+            Debug.Log("장전 중이라 무시");
+            yield break;
+        }
         anim.SetBool("Running", true);
         agent.isStopped = false;
         while (currentState == AIState.Patrol)
@@ -153,19 +162,30 @@ public class EnemyAI : MonoBehaviour
             //순찰 지점 도달 확인
             if (!agent.pathPending && agent.remainingDistance < patrolPointThreshold)
             {
-                currentPatrolIndex = (currentPatrolIndex + 1) % patrolPoints.Length; //다음 지점
+                agent.isStopped = true;
+                anim.SetBool("Running", false);
                 yield return new WaitForSeconds(1f);
+                currentPatrolIndex = (currentPatrolIndex + 1) % patrolPoints.Length; //다음 지점
+                agent.isStopped = false;
+                anim.SetBool("Running", true);
             }
             yield return null;
         }
+        anim.SetBool("Running", false);
+        agent.isStopped = true;
     }
     #endregion
     #region 상태 - 추격
     private IEnumerator ChaseRoutine()
     {
+        if (NowReloading)
+        {
+            Debug.Log("장전 중이라 무시");
+            yield break;
+        }
         anim.SetBool("Running", true);
         agent.isStopped = false;
-
+        anim.SetBool("Fire", false);
         while (currentState == AIState.Chase)
         {
             if (!foundPlayer)
@@ -173,12 +193,18 @@ public class EnemyAI : MonoBehaviour
                 SetAIState(AIState.Search); yield break;
             }
 
-            if (Vector3.Distance(transform.position, lastPlayerTransform) <= attackRange)
+            float currentDistance = Vector3.Distance(transform.position, lastPlayerTransform);
+            if (currentDistance <= attackRange) // 16m 이내로 들어오면 공격
             {
-                SetAIState(AIState.Attack); yield break;
+                Debug.Log($"공격 범위 ({attackRange}) 진입");
+                SetAIState(AIState.Attack);
+                yield break;
             }
-
+            agent.SetDestination(lastPlayerTransform);
+            yield return null;
         }
+        anim.SetBool("Running", false);
+        agent.isStopped = true;
     }
 
 
@@ -186,83 +212,158 @@ public class EnemyAI : MonoBehaviour
     #region 상태 - 공격
     private IEnumerator AttackRoutine()
     {
+        agent.isStopped = true;
+        anim.SetBool("Running", false);
+        anim.SetBool("Fire", true);
+        if (currentWeapon != null)
+        {
+            currentWeapon.Fire();
+        }
         while (currentState == AIState.Attack)
         {
-            // 플레이어가 시야에 없거나 사거리 벗어나면 추격
-            if (!foundPlayer || Vector3.Distance(transform.position, lastPlayerTransform) > attackRange + 1f)
+            //플레이어 바라보기
+           if (foundPlayer)
             {
+                LookAtPlayer(lastPlayerTransform);
+            }
+            if (currentWeapon != null && currentWeapon.ShouldStopFiring) // <- EnemyWeapon에서 보낸 신호 확인
+            {
+                // 무기 스크립트에게 발사 중지 요청
+                currentWeapon.StopFiring();
+
+                if (currentWeapon.NeedToReload())
+                {
+                    Debug.Log("AttackRoutine: 재장전 필요");
+                    SetAIState(AIState.Reload);
+                }
+                else if (!foundPlayer) // 플레이어를 놓친 경우
+                {
+                    Debug.Log("AttackRoutine: 플레이어 놓침");
+                    SetAIState(AIState.Search);
+                }
+                // else 필요하면 ㄱ
+                yield break;
+            }
+
+            //상태 전환 조건 (EnemyAI 자체 판단)
+            //플레이어를 완전히 놓쳤을 경우 (weapon.ShouldStopFiring과 중복될 수 있으나 안전을 위해 유지)
+            if (!foundPlayer)
+            {
+                Debug.Log("AttackRoutine: 플레이어 놓침. Search 상태로 전환.");
+                currentWeapon?.StopFiring(); // 무기 발사 중지
+                SetAIState(AIState.Search);
+                yield break;
+            }
+
+            //플레이어가 공격 사거리를 벗어났을 경우
+            float currentDistance = Vector3.Distance(transform.position, lastPlayerTransform);
+            if (currentDistance > attackRange * 1.5f)
+            {
+                Debug.Log($"AttackRoutine: 플레이어가 너무 멀어짐 ({currentDistance:F2}m). Chase 상태로 전환.");
+                currentWeapon.StopFiring(); // 무기 발사 중지
                 SetAIState(AIState.Chase);
                 yield break;
             }
 
-            // 재장전이 필요하면 재장전 상태로 전환
-            if (currentWeapon != null && currentWeapon.NeedToReload())
-            {
-                SetAIState(AIState.Reload);
-                yield break;
-            }
-
-            // 플레이어 바라보기 (부드러운 회전)
-            LookAtPlayer(lastPlayerTransform);
-
-            //무기 발사
-            if (currentWeapon != null && currentAttackCor == null) // 공격 코루틴이 현재 실행 중이 아닐 때만 시작
-            {
-                currentAttackCor = StartCoroutine(currentWeapon.Fire()); // EnemyAI 인스턴스를 Fire 코루틴에 전달
-            }
-
-            yield return null; // 다음 프레임까지 대기 (공격 코루틴이 자체적으로 대기하니 null)
+            yield return null;
         }
-        // AttackRoutine 끝나면 공격 코루틴도 중지
-        if (currentAttackCor != null)
-        {
-            StopCoroutine(currentAttackCor);
-            currentAttackCor = null;
-            anim.SetBool("Fire", false);
-        }
+        currentWeapon.StopFiring(); // 2중으로 요청
+        anim.SetBool("Fire", false);
+        anim.SetBool("Running", false);
+        Debug.Log("AttackRoutine 종료.");
     }
     #endregion
     #region 상태 - 엄폐
     private IEnumerator CoverRoutine()
     {
+        //장전과 한몸이었지만 이제 진짜 한몸이 되버렸고
+        //얘는 따로 구분함.
+        //NowHiding = true;
+        //anim.SetBool("Running", true);
+        //agent.isStopped = false;
+        ////적절한 지점 찾기
+        //currentCoverPos = FindCoverSpot();
+        //if (currentCoverPos != Vector3.zero)
+        //{
+        //    agent.SetDestination(currentCoverPos);
+        //    //도달하고 멈추기까지 대기
+        //    yield return new WaitUntil(() => !agent.pathPending && agent.remainingDistance <= agent.stoppingDistance + MIN_DISTANCE_TO_STOP && agent.velocity.sqrMagnitude < 0.1f);
+        //
+        //    //도달 후
+        //    NowHiding = false;
+        //    anim.SetBool("Running", false);
+        //    agent.isStopped = true;
+        //    Debug.Log("엄페 완");
+        //    yield break;
+        //}
+        //else //못찾았다면?
+        //{
+        //    NowHiding = false;
+        //    anim.SetBool("Running", false);
+        //    agent.isStopped = true;
+        //    yield break;
+        //}
         NowHiding = true;
         anim.SetBool("Running", true);
         agent.isStopped = false;
-        //적절한 지점 찾기
-        currentCoverPos = FindCoverSpot();
-        if (currentCoverPos != Vector3.zero)
+
+        Debug.Log("CoverRoutine");
+
+        Vector3 coverDestination = FindCoverSpot(); // 엄폐 지점 찾기
+        if (coverDestination != Vector3.zero)
         {
-            agent.SetDestination(currentCoverPos);
-            //도달하고 멈추기까지 대기
+            agent.SetDestination(coverDestination);
+            // 엄폐 지점 도달까지 대기
             yield return new WaitUntil(() => !agent.pathPending && agent.remainingDistance <= agent.stoppingDistance + MIN_DISTANCE_TO_STOP && agent.velocity.sqrMagnitude < 0.1f);
 
-            //도달 후
-            NowHiding = false;
+            Debug.Log("엄폐 지점 도달!");
             anim.SetBool("Running", false);
             agent.isStopped = true;
-            Debug.Log("엄페 완");
-            if (currentWeapon.NeedToReload())
+            yield return new WaitForSeconds(timeInCover); 
+            if (foundPlayer)
             {
-                SetAIState(AIState.Reload); yield break;
+                SetAIState(AIState.Attack);
             }
-            SetAIState(AIState.Search); yield break;
+            else
+            {
+                SetAIState(AIState.Patrol);
+            }
+            yield break; // 코루틴 종료
         }
-        else
+        else // 엄폐 지점을 못 찾았다면
         {
-            SetAIState(AIState.Search);
+            Debug.LogWarning("엄폐 지점 없는데용");
+            NowHiding = false; // 엄폐 실패
+            anim.SetBool("Running", false);
+            agent.isStopped = true;
+            // 엄폐를 못했으니 어떤 상태로 돌아갈지 결정 (예: Attack, Search)
+            if (foundPlayer)
+            {
+                SetAIState(AIState.Attack);
+            }
+            else
+            {
+                SetAIState(AIState.Patrol);
+            }
+            yield break;
         }
-        yield return null;
     }
     #endregion
     #region 상태 - 순찰
     private IEnumerator SearchRoutine()
     {
-        anim.SetBool("Running", false);
+        if (NowReloading)
+        {
+            Debug.Log("장전 중이라 무시");
+            yield break;
+        }
+        anim.SetBool("Running", true);
+        anim.SetBool("Fire", false);
         agent.isStopped = false;
 
         Vector3 searchOrigin = lastPlayerTransform;
         Vector3 randomSearch = Vector3.zero;
-
+        searchTimer = 8f;
         while (currentState == AIState.Search && searchTimer > 0)
         {
             if (foundPlayer)
@@ -290,25 +391,70 @@ public class EnemyAI : MonoBehaviour
         if (!foundPlayer)
         {
             SetAIState(AIState.Patrol);
+            yield break;
         }
     }
     #endregion
     #region 상태 - 장전
     private IEnumerator ReloadRoutine()
     {
+        //본래 엄폐와 장전을 따로 뒀지만, 엄폐를 장전할 때만 실행하기에
+        //하나로 합쳐버림
+        //anim.SetBool("Running", false);
+        //agent.isStopped = true;
+        //NowReloading = true;
+        //Debug.Log("재장전 시작!");
+        //SetAIState(AIState.Cover); // 엄폐하고서 재장전
+        //yield return StartCoroutine(CoverRoutine());
+        //if (currentWeapon != null)
+        //{
+        //    yield return StartCoroutine(currentWeapon.ReloadWeapon());
+        //}
+        //Debug.Log("재장전 완료!");
+        //NowReloading = false;
+        //if (foundPlayer)
+        //{
+        //    SetAIState(AIState.Attack);
+        //}
+        //else
+        //{
+        //    SetAIState(AIState.Search);
+        //}
         anim.SetBool("Running", false);
         agent.isStopped = true;
         NowReloading = true;
         Debug.Log("재장전 시작!");
-        SetAIState(AIState.Cover); // 엄폐하고서 재장전
-        yield return new WaitUntil(() => NowHiding = false);
+
+        // 엄폐 지점 찾기 및 이동 (CoverRoutine을 직접 호출하여 기다리지 않고, 로직을 여기에 내장)
+        Vector3 currentReloadCoverPos = FindCoverSpot();
+        if (currentReloadCoverPos != Vector3.zero)
+        {
+            agent.SetDestination(currentReloadCoverPos);
+            anim.SetBool("Running", true);
+                                           // 엄폐 지점에 도착할 때까지 대기
+            yield return new WaitUntil(() => !agent.pathPending && agent.remainingDistance <= agent.stoppingDistance + MIN_DISTANCE_TO_STOP && agent.velocity.sqrMagnitude < 0.1f);
+            anim.SetBool("Running", false);
+            agent.isStopped = true;
+            Debug.Log("엄폐 지점에 도달");
+        }
+        else
+        {
+            Debug.Log("재장전 중 엄폐 지점 찾기 실패. 현재 위치에서 재장전.");
+            // 엄폐 지점을 찾지 못해도 계속 장전
+        }
+
+        // 장전 로직
         if (currentWeapon != null)
         {
-            yield return StartCoroutine(currentWeapon.ReloadWeapon());
-            yield return new WaitUntil(() => !NowReloading);
+            anim.SetBool("Reload", true); // 재장전 애니메이션 시작
+            yield return StartCoroutine(currentWeapon.ReloadWeapon()); // 무기 스크립트의 재장전 코루틴 호출
+            anim.SetBool("Reload", false); // 재장전 애니메이션 종료
         }
-        Debug.Log("재장전 완료!");
 
+        Debug.Log("재장전 완료!");
+        NowReloading = false; // 재장전 플래그 해제
+
+        // 재장전 완료 후 다음 상태 결정
         if (foundPlayer)
         {
             SetAIState(AIState.Attack);
@@ -359,7 +505,7 @@ public class EnemyAI : MonoBehaviour
         }
         return coverBestPos;
     }
-    private void OnEnable()
+    private void OnEnable()//풀링으로 뽑을 경우를 대비한 것.
     {
         if(weapon != null)
         {
@@ -408,7 +554,7 @@ public class EnemyAI : MonoBehaviour
         SetAIState(AIState.Patrol);
     }
 
-    private void FixedUpdate()
+    private void Update()
     {
         if (alive == true)
         {
@@ -558,11 +704,16 @@ public class EnemyAI : MonoBehaviour
 
     void LookAtPlayer(Vector3 playerPos)
     {
-        Vector3 direction = (playerPos - transform.position).normalized;
-        direction.y = 0; // 고개 숙이는 걸 방지 (회전은 수평 방향만)
+        Vector3 targetPosFlat = playerPos;
+        targetPosFlat.y = transform.position.y;
 
-        targetRotation = Quaternion.LookRotation(direction);
-        transform.rotation = Quaternion.Lerp(transform.rotation, targetRotation, Time.deltaTime * rotationSpeed);
+        Vector3 direction = (targetPosFlat - transform.position).normalized;
+
+        if (direction == Vector3.zero) return; // 방향이 없으면 회전하지 않음
+
+        Quaternion targetRotation = Quaternion.LookRotation(direction);
+        // 회전 속도 조절
+        transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, Time.deltaTime * rotationSpeed);
         //weapon.transform.rotation = Quaternion.Lerp(transform.rotation, targetRotation, Time.deltaTime * rotationSpeed);
     }
 
@@ -574,6 +725,11 @@ public class EnemyAI : MonoBehaviour
         {
             alive = false;
             Die();
+        }
+        if (!foundPlayer)
+        {
+            SetAIState(AIState.Cover);
+            //맞으면 숨도록
         }
     }
 

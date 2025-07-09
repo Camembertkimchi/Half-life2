@@ -84,8 +84,6 @@ public class BulletCon : MonoBehaviour
 
     void OnDisable()
     {
-        
-       
         if(isReleased == true)
         {
             isReleased = false;
@@ -93,7 +91,6 @@ public class BulletCon : MonoBehaviour
             {
                 StopCoroutine(currentCor);
             }
-           
             currentCor = null;
         }
     }
@@ -102,10 +99,6 @@ public class BulletCon : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-       
-      
-
-
         if (!shootedByPlayer)//¿˚¿Ã ΩÚ ∂ß
         {
             if (other.gameObject.CompareTag("Player"))
@@ -115,9 +108,6 @@ public class BulletCon : MonoBehaviour
                 Release();
             }
         }
-
-
-
 
         if (shootedByPlayer == true)
         {
@@ -148,16 +138,10 @@ public class BulletCon : MonoBehaviour
             if (ps != null)
             {
                 ps.Play();
-            }
-
-
-            
+            }  
         }
         Release();
-
-       
     }
-
 
 }
     

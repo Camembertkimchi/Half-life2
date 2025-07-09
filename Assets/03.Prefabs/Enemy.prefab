@@ -116,7 +116,7 @@ Rigidbody:
   m_ImplicitCom: 1
   m_ImplicitTensor: 1
   m_UseGravity: 1
-  m_IsKinematic: 0
+  m_IsKinematic: 1
   m_Interpolate: 0
   m_Constraints: 80
   m_CollisionDetection: 0
@@ -181,7 +181,7 @@ MonoBehaviour:
   weapon: {fileID: 5396316586498329160}
   hp: 200
   alive: 1
-  viewAngle: 160
+  viewAngle: 60
   viewRadius: 20
   targetMask:
     serializedVersion: 2
@@ -195,7 +195,7 @@ MonoBehaviour:
   foundPlayer: 0
   lastPlayerTransform: {x: 0, y: 0, z: 0}
   playerInSightThisFrame: 0
-  attackRange: 7
+  attackRange: 16
   currentAttackTime: 0
   maxAttackTime: 5
   reloading: 0
