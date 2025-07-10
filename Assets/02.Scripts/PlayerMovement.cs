@@ -61,58 +61,58 @@ public class PlayerMovement : MonoBehaviour
             Move();
             LookAround();
             Jump();
-
-            if (Input.GetMouseButtonDown(0))
-            {
-                weapon.Fire1();
-            }
-            if (Input.GetMouseButtonDown(1))
-            {
-                weapon.Fire2();
-            }
-            if (Input.GetKeyDown(KeyCode.Alpha1))
-            {
-                currentState = PlayerWeaponState.GravityGun;
-                weapon.EquipWeapon(currentState);
-            }
-            if (Input.GetKeyDown(KeyCode.Alpha2))
-            {
-                currentState = PlayerWeaponState.Pistol;
-                weapon.EquipWeapon(currentState);
-            }
-            if (Input.GetKeyDown(KeyCode.Alpha3))
-            {
-                currentState = PlayerWeaponState.Magnum;
-                weapon.EquipWeapon(currentState);
-            }
-
-            if (Input.GetKeyDown(KeyCode.Alpha4))
-            {
-                currentState = PlayerWeaponState.SMG;
-                weapon.EquipWeapon(currentState);
-            }
-            if (Input.GetKeyDown(KeyCode.Alpha5))
-            {
-                currentState = PlayerWeaponState.AR;
-                weapon.EquipWeapon(currentState);
-            }
-            if (Input.GetKeyDown(KeyCode.Alpha6))
-            {
-                currentState = PlayerWeaponState.Shotgun;
-                weapon.EquipWeapon(currentState);
-            }
-            if (Input.GetKeyDown(KeyCode.Alpha7))
-            {
-                currentState = PlayerWeaponState.Sniper;
-                weapon.EquipWeapon(currentState);
-            }
-
-            if (Input.GetKeyDown(KeyCode.R))
-            {
-                weapon.Reloading();
-            }
-            crosshair.position = Input.mousePosition;
-
+            #region 구버전 무기 변경
+            //if (Input.GetMouseButtonDown(0))
+            //{
+            //    weapon.Fire1();
+            //}
+            //if (Input.GetMouseButtonDown(1))
+            //{
+            //    weapon.Fire2();
+            //}
+            //if (Input.GetKeyDown(KeyCode.Alpha1))
+            //{
+            //    currentState = PlayerWeaponState.GravityGun;
+            //    weapon.EquipWeapon(currentState);
+            //}
+            //if (Input.GetKeyDown(KeyCode.Alpha2))
+            //{
+            //    currentState = PlayerWeaponState.Pistol;
+            //    weapon.EquipWeapon(currentState);
+            //}
+            //if (Input.GetKeyDown(KeyCode.Alpha3))
+            //{
+            //    currentState = PlayerWeaponState.Magnum;
+            //    weapon.EquipWeapon(currentState);
+            //}
+            //
+            //if (Input.GetKeyDown(KeyCode.Alpha4))
+            //{
+            //    currentState = PlayerWeaponState.SMG;
+            //    weapon.EquipWeapon(currentState);
+            //}
+            //if (Input.GetKeyDown(KeyCode.Alpha5))
+            //{
+            //    currentState = PlayerWeaponState.AR;
+            //    weapon.EquipWeapon(currentState);
+            //}
+            //if (Input.GetKeyDown(KeyCode.Alpha6))
+            //{
+            //    currentState = PlayerWeaponState.Shotgun;
+            //    weapon.EquipWeapon(currentState);
+            //}
+            //if (Input.GetKeyDown(KeyCode.Alpha7))
+            //{
+            //    currentState = PlayerWeaponState.Sniper;
+            //    weapon.EquipWeapon(currentState);
+            //}
+            //
+            //if (Input.GetKeyDown(KeyCode.R))
+            //{
+            //    weapon.Reloading();
+            //}
+            //crosshair.position = Input.mousePosition;
+            #endregion
             playerHpUI.text = currentHp + "";
 
             isGrounded = Physics.Raycast(transform.position, Vector3.down, groundCheckDistance);

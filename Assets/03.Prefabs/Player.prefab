@@ -14390,7 +14390,7 @@ MonoBehaviour:
   currentAmmoUI: {fileID: 7659067139536986681}
   currentMagUI: {fileID: 2911322656435411442}
   muzzleFlashObj: {fileID: 2413573234705057052}
-  muzzleFlashFX: {fileID: 0}
+  muzzleFlashFX: {fileID: 8068594963307430936}
   nowReloading: 0
   fullAutoFiring: 0
   semiAutoFiring: 0
@@ -15801,9 +15801,6 @@ MonoBehaviour:
   alive: 1
   weapon: {fileID: 400987836770659757}
   groundCheckDistance: 0.2
-  groundCheckMask:
-    serializedVersion: 2
-    m_Bits: 0
   playerHpUI: {fileID: 7851905677637161667}
   crosshair: {fileID: 0}
   deadCanvus: {fileID: 463165082174167649}

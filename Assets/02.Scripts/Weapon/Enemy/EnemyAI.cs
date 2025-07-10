@@ -741,11 +741,11 @@ public class EnemyAI : MonoBehaviour
             alive = false;
             Die();
         }
-        if (!foundPlayer)
-        {
-            SetAIState(AIState.Cover);
-            //맞으면 숨도록
-        }
+        //if (!foundPlayer)
+        //{
+        //    SetAIState(AIState.Cover);
+        //    //맞으면 숨도록
+        //}
     }
 
     void Die()
