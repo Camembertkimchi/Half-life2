@@ -74,6 +74,7 @@ public class EnemyAI : MonoBehaviour
     private Vector3 currentCoverPos;
     [SerializeField] private float coverSearchRadius = 20f; //엄폐 지점 검색 반경
     [SerializeField] private float timeInCover = 5f; //엄폐 유지 시간
+    [SerializeField] private int maxAttempts = 10;
     //최적화
     private Collider[] wallCols = new Collider[10];
     private Collider[] targetCols = new Collider[10];
@@ -431,6 +432,7 @@ public class EnemyAI : MonoBehaviour
         {
             agent.SetDestination(currentReloadCoverPos);
             anim.SetBool("Running", true);
+            agent.isStopped = false;
                                            // 엄폐 지점에 도착할 때까지 대기
             yield return new WaitUntil(() => !agent.pathPending && agent.remainingDistance <= agent.stoppingDistance + MIN_DISTANCE_TO_STOP && agent.velocity.sqrMagnitude < 0.1f);
             anim.SetBool("Running", false);
@@ -478,33 +480,46 @@ public class EnemyAI : MonoBehaviour
     }
     private Vector3 FindCoverSpot()
     {
-        Vector3 coverBestPos = Vector3.zero;
-        //레이어에 따른 오브젝트 검색
-        int numCover = Physics.OverlapSphereNonAlloc(transform.position, coverSearchRadius, wallCols, coverPointMask);
-        if (numCover == 0) return Vector3.zero;
-        
-        for (int i = 0; i < numCover; i++)
+        Vector3 playerCurrentPos = lastPlayerTransform;
+        for (int i = 0; i < maxAttempts; i++)
         {
-            Collider cover = wallCols[i];
-            Vector3 coverPos = cover.transform.position;
-            Vector3 directionToCover = (coverPos - transform.position).normalized;
-            Vector3 directionToPlayer = (lastPlayerTransform - coverPos).normalized;
-            //엄폐물 뒤 반대 방향에 엄폐 위치 두기
-            Vector3 potentialPos = coverPos - directionToPlayer * 2f;//엄폐물에서 2M 뒤로
-            NavMeshHit hit;
-            if (NavMesh.SamplePosition(potentialPos, out hit, 5f, NavMesh.AllAreas))
-            {
-                Vector3 validCoverPos = hit.position;
+            //주변에서 랜덤한 지점 찾기
+            Vector3 randomPoint = transform.position + UnityEngine.Random.insideUnitSphere * coverSearchRadius;
+            randomPoint.y = transform.position.y; // Y축은 봇과 동일하게 유지하여 수평적인 엄폐만 고려
 
-                //플레이어로부터 얼마나 가려지는지 Raycast로 확인하고 엄폐물이 가리는지 확인
-                if (Physics.Raycast(validCoverPos, (lastPlayerTransform - validCoverPos).normalized, Vector3.Distance(validCoverPos, lastPlayerTransform), ObstacleMask))
+            NavMeshHit hit;
+            //NavMesh 위에 있는지 확인
+            if (NavMesh.SamplePosition(randomPoint, out hit, 1.0f, NavMesh.AllAreas))
+            {
+                Vector3 candidateCoverSpot = hit.position;
+
+                // 3. 엄폐 지점 후보에서 플레이어까지의 시야 방해 여부 확인 (레이캐스트)
+                // 레이캐스트 시작점: 엄폐 지점 후보 (살짝 위로 올려서 땅에 박히는 것 방지)
+                Vector3 rayStart = candidateCoverSpot + Vector3.up * 0.5f;
+                // 레이캐스트 방향: 엄폐 지점 후보에서 플레이어 방향으로
+                Vector3 rayDirection = (playerCurrentPos - rayStart).normalized;
+                // 레이캐스트 최대 거리: 봇과 플레이어 사이의 거리
+                float rayDistance = Vector3.Distance(rayStart, playerCurrentPos);
+
+                RaycastHit hitInfo;
+                // 플레이어를 가리는 엄폐물이 있는지 확인 (플레이어 레이어는 무시해야 함)
+                // layerMask를 설정하여 플레이어 레이어를 제외하고, 엄폐물 레이어만 검사하도록 합니다.
+                // 예: public LayerMask coverLayerMask; (Wall, Obstacle 등)
+                if (Physics.Raycast(rayStart, rayDirection, out hitInfo, rayDistance, ObstacleMask))
                 {
-                    float distanceFromPlayer = Vector3.Distance(validCoverPos, lastPlayerTransform);
+                    // 레이캐스트가 플레이어가 아닌 다른 물체(엄폐물)에 부딪혔다면, 엄폐 가능성이 있음
+                    if (hitInfo.collider.gameObject != null && !hitInfo.collider.CompareTag("Player")) // 플레이어는 엄폐물이 아니므로 제외
+                    {
+                        Debug.Log($"엄폐 지점 찾음: {candidateCoverSpot}, 가로막는 오브젝트: {hitInfo.collider.name}");
+                        return candidateCoverSpot; // 유효한 엄폐 지점 반환
+                    }
                 }
             }
         }
-        return coverBestPos;
+        Debug.LogWarning("유효한 엄폐 지점을 찾지 못했습니다.");
+        return Vector3.zero; // 유효한 엄폐 지점을 찾지 못하면 Vector3.zero 반환
     }
+
     private void OnEnable()//풀링으로 뽑을 경우를 대비한 것.
     {
         if(weapon != null)
