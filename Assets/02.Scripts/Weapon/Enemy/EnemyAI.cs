@@ -756,7 +756,8 @@ public class EnemyAI : MonoBehaviour
 
     IEnumerator Dead()
     {
-
+        anim.SetBool("Running", false);
+        anim.SetBool("Fire", false);
         anim.SetTrigger("Dead");
 
 

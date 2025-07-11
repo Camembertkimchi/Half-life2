@@ -90,8 +90,20 @@ public class PlayerWeapon : MonoBehaviour
     private PlayerWeaponState reloadingWeaponState;
     private AmmoType reloadingAmmoType;
     float scroll;
+    [System.Serializable]
+    public class WeaponAnimationData
+    {
+        public PlayerWeaponState weaponState;
+        public AnimatorOverrideController armOverrideController;
+        public AnimatorOverrideController gunOverrideController;
+    }
+    [Header("Animation Settings")]
+    [SerializeField] private Animator defaultArmAnim; // 팔 애니메이터
+    [SerializeField] private Animator defaultGunAnim; // 총기 애니메이터
+    [SerializeField] private List<WeaponAnimationData> weaponAnimationDatas;
+
     //탄 종류별 관리를 위한 enum 사용 
-    
+
 
     //[SerializeField] int granadeForSmg;
     //public int GrandeForSmg
@@ -102,8 +114,6 @@ public class PlayerWeapon : MonoBehaviour
     //[SerializeField] int coreForAR;
 
     [Header("초당 정확도 감소와 회복 속도")]
-
-
     private float currentSpread = 0f; // 현재 탄 퍼짐 값
     private float lastShotTime = 0f;  // 마지막으로 발사한 시간
 
@@ -123,6 +133,7 @@ public class PlayerWeapon : MonoBehaviour
 
     private void Start()
     {
+
         allWeaponStates = System.Enum.GetValues(typeof(PlayerWeaponState)).Cast<PlayerWeaponState>()
             .Where(s => s != PlayerWeaponState.CrowBar).OrderBy(s => (int)s).ToArray();
         foreach (var weapon in weaponScripts)
@@ -153,7 +164,10 @@ public class PlayerWeapon : MonoBehaviour
                 // 여기서는 일단 첫 번째로 등록되는 무기의 maxMag을 따르도록 합니다.
                 Debug.Log($"magaineDict에 {weapon.ammoType}가 이미 존재합니다. 초기 여분 탄약은 {magaineDict[weapon.ammoType]}로 유지됩니다.");
             }
-        }
+            if (defaultArmAnim == null) Debug.LogError("Default Arm Animator 안보임");
+            if (defaultGunAnim == null) Debug.LogError("Default Gun Animator 안보임");
+        
+    }
         foreach(var obj in weaponPrefabs)
         {
             string name = obj.name;
@@ -278,24 +292,46 @@ public class PlayerWeapon : MonoBehaviour
     }
     void EquipWeaponWithNumber(int numberKey)
     {
-        // Enum의 값이 숫자 키와 직접 매핑되어 있으면 이 코드 작동
-        // 만약 Enum 값이 순차적이지 않거나, 특정 무기를 특정 숫자 키에 할당하고 싶다면
-        // 여기에 더 명확한 Dictionary<int, PlayerWeaponState>을 써야함
-        PlayerWeaponState targetState = (PlayerWeaponState)(1 << (numberKey - 1)); // 기존 PlayerWeaponState가 비트 플래그 방식일 경우
-
-        // 비트 플래그 방식이 아니라 Enum 값이 순서대로 1, 2, 3 같이 정의되었다면 아래를 사용
-        // PlayerWeaponState targetState = (PlayerWeaponState)numberKey;
+        // weaponScripts 배열은 0부터 시작하므로 numberKey-1 사용
+        // 이 방식은 weaponScripts 배열의 순서가 숫자 키의 순서와 일치한다고 가정합니다.
         if (numberKey > 0 && numberKey <= weaponScripts.Length)
         {
-            // weaponScripts 배열은 0부터 시작하므로 numberKey-1 사용
-            PlayerWeaponState targetWeapon = weaponScripts[numberKey - 1].state;
-            EquipWeapon(targetWeapon);
+            PlayerWeaponState targetWeaponState = weaponScripts[numberKey - 1].state;
+
+            // 현재 활성화된 무기와 동일하다면 스위칭하지 않음 (불필요한 호출 방지)
+            if (currentWeaponState == targetWeaponState)
+            {
+                Debug.Log($"이미 {targetWeaponState} 무기가 활성화되어 있습니다.");
+                return;
+            }
+
+            EquipWeapon(targetWeaponState);
         }
         else
         {
-            Debug.LogWarning($"숫자 키 {numberKey} 비었음");
+            Debug.LogWarning($"숫자 키 {numberKey}에 해당하는 무기를 찾을 수 없습니다. weaponScripts 배열의 크기({weaponScripts.Length})를 확인하거나, 해당 슬롯에 무기를 할당하세요.");
         }
     }
+   // void EquipWeaponWithNumber(int numberKey)
+   // {
+   //     // Enum의 값이 숫자 키와 직접 매핑되어 있으면 이 코드 작동
+   //     // 만약 Enum 값이 순차적이지 않거나, 특정 무기를 특정 숫자 키에 할당하고 싶다면
+   //     // 여기에 더 명확한 Dictionary<int, PlayerWeaponState>을 써야함
+   //     PlayerWeaponState targetState = (PlayerWeaponState)(1 << (numberKey - 1)); // 기존 PlayerWeaponState가 비트 플래그 방식일 경우
+   //
+   //     // 비트 플래그 방식이 아니라 Enum 값이 순서대로 1, 2, 3 같이 정의되었다면 아래를 사용
+   //     // PlayerWeaponState targetState = (PlayerWeaponState)numberKey;
+   //     if (numberKey > 0 && numberKey <= weaponScripts.Length)
+   //     {
+   //         // weaponScripts 배열은 0부터 시작하므로 numberKey-1 사용
+   //         PlayerWeaponState targetWeapon = weaponScripts[numberKey - 1].state;
+   //         EquipWeapon(targetWeapon);
+   //     }
+   //     else
+   //     {
+   //         Debug.LogWarning($"숫자 키 {numberKey} 비었음");
+   //     }
+   // }
 
         void UpdateAmmo()
     {
@@ -327,7 +363,17 @@ public class PlayerWeapon : MonoBehaviour
     }
     IEnumerator Reload()
     {
-        //defaultGunAnim.SetBool("Reload", true);
+        if (currentAmmo != 0)
+        {
+            defaultArmAnim.SetTrigger("Reload_Tac");
+            defaultGunAnim.SetTrigger("Reload_Tac");
+        }
+        else
+        {
+            defaultArmAnim.SetTrigger("Reload_Empty");
+            defaultGunAnim.SetTrigger("Reload_Empty");
+        }
+
         nowReloading = true;
         //ReladongTime = ??f;
         yield return ReloadingTime;
@@ -506,7 +552,8 @@ public class PlayerWeapon : MonoBehaviour
             StopCoroutine(currentCor);
             currentCor = null;
             nowReloading = false;
-            // GunAnim.SetBool("Reload", false);
+            defaultGunAnim.SetBool("Reload", false); 
+            defaultArmAnim.SetBool("Reload", false); 
         }
         if (!weaponDictionary.TryGetValue(newWeaponState.ToString(), out GameObject weapon))
         {
@@ -544,92 +591,6 @@ public class PlayerWeapon : MonoBehaviour
         {
             Debug.LogWarning("BulletPooling 또는 bulletPrefab이 할당되지 않았습니다. 총알 발사가 작동하지 않을 수 있습니다.");
         }
-        // else
-        // {
-        //     // 기존 무기 삭제 후 새 무기 복사
-        //     if (activatedWeaponScript != null) activatedWeaponScript = null;
-        //     activatedWeaponScript = Instantiate(weaponScript);
-        //
-        //     // 총알 프리팹 설정
-        //     activatedWeaponScript.SetBullet(pool.bulletPrefab);
-        //     //activatedWeaponScript.bulletScript = activatedWeaponScript.bullet.GetComponent<BulletCon>();
-        //     //
-        //     ////데미지 적용
-        //     //activatedWeaponScript.bulletScript.ReflectDamage(activatedWeaponScript.damage);
-        #region 하드 코딩의 흔적,,,
-        //switch (newWeaponState)
-        //{
-        //    case PlayerWeaponState.Pistol: 
-        //        if(activatedWeaponScript.maxAmmo != maxPistolMag)
-        //        {
-        //            maxPistolAmmo = activatedWeaponScript.maxAmmo;
-        //        }
-        //       
-        //        break;
-        //
-        //        case PlayerWeaponState.Magnum: 
-        //        if(activatedWeaponScript.maxAmmo != maxMagnumMag)
-        //        {
-        //            maxMagnumMag = activatedWeaponScript.maxAmmo;
-        //        }
-        //        break;
-        //
-        //    case PlayerWeaponState.SMG:
-        //        if(activatedWeaponScript.maxAmmo != maxPistolMag)
-        //        {
-        //            maxPistolMag = activatedWeaponScript.maxAmmo;
-        //        }
-        //        break;
-        //
-        //    case PlayerWeaponState.AR:
-        //        if(activatedWeaponScript.maxAmmo != maxArMag)
-        //        {
-        //            maxArMag = activatedWeaponScript.maxAmmo;
-        //        }
-        //        break;
-        //
-        //    case PlayerWeaponState.Shotgun:
-        //        if(activatedWeaponScript.maxAmmo != maxSgMag)
-        //        {
-        //            maxSgMag = activatedWeaponScript.maxAmmo;
-        //        }
-        //        break;
-        //
-        //    case PlayerWeaponState.Sniper:
-        //        if(activatedWeaponScript.maxAmmo != maxSniperMag)
-        //        {
-        //            maxSniperMag = activatedWeaponScript.maxAmmo;
-        //        }
-        //        break;
-        //
-        //    case PlayerWeaponState.Granade:
-        //        if(activatedWeaponScript.maxAmmo != maxGranade)
-        //        {
-        //            maxGranade = activatedWeaponScript.maxAmmo;
-        //        }
-        //        break;
-        //
-        //    case PlayerWeaponState.RPG: 
-        //        if(activatedWeaponScript.maxAmmo != maxRPGAmmo)
-        //        {
-        //            maxRPGAmmo = activatedWeaponScript.maxAmmo;
-        //        }
-        //        break;
-        //
-        //    default: break;
-        //}
-        #endregion
-        // }
-
-
-
-        //if (weaponScriptDictionary.TryGetValue(newWeaponState.ToString(), out PlayerScriptableWeapon data))
-        //{
-        //    currentWeaponState = newWeaponState;
-        //    currentAmmo = ammoDict[newWeaponState];
-        //    currentMag = magaineDict[activatedWeaponScript.ammoType];
-        //}
-
         if (currentWeaponState != PlayerWeaponState.GravityGun)
         {
             // 활성화된 무기 게임 오브젝트에서 "muzzle"이라는 이름의 자식 Transform을 찾습니다.
@@ -649,63 +610,63 @@ public class PlayerWeapon : MonoBehaviour
         {
             muzzlePos = null; // 중력건은 총구가 필요 없으므로 null로 설정
         }
-        //if (anim != null) anim = null;
+        if (defaultArmAnim != null && defaultGunAnim != null)
+        {
+            // 기본은 애니메이션 오버라이드를 적용하지 않음
+            if (newWeaponState == PlayerWeaponState.CrowBar)
+            {
+                // 기본 애니메이터 컨트롤러를 다시 설정하거나, 특정 파라미터를 통해 기본 상태로 전환
+                defaultArmAnim.runtimeAnimatorController = defaultArmAnim.runtimeAnimatorController; // 재할당하여 초기화
+                defaultGunAnim.runtimeAnimatorController = defaultGunAnim.runtimeAnimatorController; // 재할당하여 초기화
+                defaultArmAnim.SetTrigger("Equip");
+                defaultGunAnim.SetTrigger("Equip");
+                Debug.Log("CrowBar 장착: 기본 애니메이션 사용");
+            }
+            else
+            {
+                // 각 무기별 AnimatorOverrideController를 찾아 적용
+                WeaponAnimationData animData = weaponAnimationDatas.Find(data => data.weaponState == newWeaponState);
+                if (animData != null)
+                {
+                    if (animData.armOverrideController != null)
+                    {
+                        defaultArmAnim.runtimeAnimatorController = animData.armOverrideController;
+                    }
+                    else
+                    {
+                        Debug.LogWarning($"{newWeaponState}에 대한 Arm Override Controller가 할당되지 않았습니다.");
+                        defaultArmAnim.runtimeAnimatorController = defaultArmAnim.runtimeAnimatorController; // 기본 컨트롤러 유지
+                    }
 
-        //anim = activatedWeapon.GetComponent<Animator>();
-        //currentWeaponState = newWeaponState; // 현재 무기 상태 업데이트
+                    if (animData.gunOverrideController != null)
+                    {
+                        defaultGunAnim.runtimeAnimatorController = animData.gunOverrideController;
+                    }
+                    else
+                    {
+                        Debug.LogWarning($"{newWeaponState}에 대한 Gun Override Controller가 할당되지 않았습니다.");
+                        defaultGunAnim.runtimeAnimatorController = defaultGunAnim.runtimeAnimatorController; // 기본 컨트롤러 유지
+                    }
 
-        // 기본 애니메이터에 AnimatorOverrideController를 설정하는 코드
-        //if (activatedWeaponScript.gunAnimatorOverride != null)
-        //{
-        //    Debug.Log("찾았다");
-        //    //defaultGunAnim.runtimeAnimatorController = activatedWeaponScript.gunAnimatorOverride;
-        //}
-        //
-        //
-        //if (activatedWeaponScript.armAnimatorOverride != null)
-        //{
-        //    //defaultArmAnim.runtimeAnimatorController = activatedWeaponScript.armAnimatorOverride;
-        //}
+                    // 무기 장착 애니메이션 트리거
+                    defaultArmAnim.SetTrigger("Equip");
+                    defaultGunAnim.SetTrigger("Equip"); // 총기 애니메이터에도 장착 트리거가 있다면
+                    Debug.Log($"{newWeaponState} 장착: 오버라이드 애니메이션 적용");
 
-        //if (activatedWeaponScript.gunAnimatorOverride != null)
-        //{
-        // 새로운 AnimatorOverrideController 생성
-        //AnimatorOverrideController newGunOverride = new AnimatorOverrideController(defalutGunAnim);
-        //AnimatorOverrideController newArmOverride = new AnimatorOverrideController(defalutArmAnim);
-
-        // 기존 애니메이션 클립 정보를 담을 리스트 생성
-        //List<KeyValuePair<AnimationClip, AnimationClip>> gunOverrides = new List<KeyValuePair<AnimationClip, AnimationClip>>();
-        //List<KeyValuePair<AnimationClip, AnimationClip>> armOverrides = new List<KeyValuePair<AnimationClip, AnimationClip>>();
-
-        // gunAnimatorOverride의 클립을 가져와서 적용
-        //foreach (var clip in activatedWeaponScript.gunAnimatorOverride.animationClips)
-        //{
-        //    // KeyValuePair<AnimationClip, AnimationClip> 형태로 추가
-        //    gunOverrides.Add(new KeyValuePair<AnimationClip, AnimationClip>(clip, activatedWeaponScript.gunAnimatorOverride[clip]));
-        //}
-        //
-        //// armAnimatorOverride의 클립을 가져와서 적용
-        //foreach (var clip in activatedWeaponScript.armAnimatorOverride.animationClips)
-        //{
-        //    // KeyValuePair<AnimationClip, AnimationClip> 형태로 추가
-        //    armOverrides.Add(new KeyValuePair<AnimationClip, AnimationClip>(clip, activatedWeaponScript.armAnimatorOverride[clip]));
-        //}
-        //
-        //// 새로운 오버라이드 설정
-        //newGunOverride.ApplyOverrides(gunOverrides);
-        //newArmOverride.ApplyOverrides(armOverrides);
-        //
-        //// 애니메이터에 적용
-        //defalutGunAnim.runtimeAnimatorController = newGunOverride;
-        //defalutArmAnim.runtimeAnimatorController = newArmOverride;
-
-        //defaultArmAnim = activatedWeaponScript.armAnimatorOverride;
-        // defaultGunAnim = activatedWeaponScript.gunAnimatorOverride;
-
-        // }
-
-
-
+                }
+                else
+                {
+                    Debug.LogWarning($"WeaponAnimationData for {newWeaponState} not found. Using default animations.");
+                    // 해당 무기에 대한 애니메이션 데이터가 없으면 기본 애니메이션 컨트롤러 유지
+                    defaultArmAnim.runtimeAnimatorController = defaultArmAnim.runtimeAnimatorController;
+                    defaultGunAnim.runtimeAnimatorController = defaultGunAnim.runtimeAnimatorController;
+                }
+            }
+        }
+        else
+        {
+            Debug.LogWarning("레퍼런스 없음");
+        }
     }
 
     public void Fire1()
@@ -730,6 +691,7 @@ public class PlayerWeapon : MonoBehaviour
         {
             if (!semiAutoFiring)
             {
+                Shoot();
                 semiAutoFiring = true;
                 StartCoroutine(SemiAutoFire());
             }
@@ -785,8 +747,6 @@ public class PlayerWeapon : MonoBehaviour
     IEnumerator SemiAutoFire()
     {
 
-            Shoot();
-        
         
         //defaultGunAnim.SetTrigger("Fire");
         yield return new WaitForSeconds(activatedWeaponScript.fireRate);

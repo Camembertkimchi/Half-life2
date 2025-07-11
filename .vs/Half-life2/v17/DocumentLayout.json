@@ -7,16 +7,16 @@
       "RelativeMoniker": "D:0:0:{A31EFC06-F332-6A33-F869-087BD7F9E526}|Assembly-CSharp.csproj|solutionrelative:assets\\02.scripts\\weapon\\player\\playerweapon.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
+      "AbsoluteMoniker": "D:0:0:{A31EFC06-F332-6A33-F869-087BD7F9E526}|Assembly-CSharp.csproj|C:\\Users\\KGA\\Half-life2\\assets\\02.scripts\\weapon\\enemy\\enemyai.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A31EFC06-F332-6A33-F869-087BD7F9E526}|Assembly-CSharp.csproj|solutionrelative:assets\\02.scripts\\weapon\\enemy\\enemyai.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
       "AbsoluteMoniker": "D:0:0:{A31EFC06-F332-6A33-F869-087BD7F9E526}|Assembly-CSharp.csproj|C:\\Users\\KGA\\Half-life2\\assets\\02.scripts\\playermovement.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{A31EFC06-F332-6A33-F869-087BD7F9E526}|Assembly-CSharp.csproj|solutionrelative:assets\\02.scripts\\playermovement.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{A31EFC06-F332-6A33-F869-087BD7F9E526}|Assembly-CSharp.csproj|C:\\Users\\KGA\\Half-life2\\assets\\02.scripts\\weapon\\player\\playerscriptableweapon.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{A31EFC06-F332-6A33-F869-087BD7F9E526}|Assembly-CSharp.csproj|solutionrelative:assets\\02.scripts\\weapon\\player\\playerscriptableweapon.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{A31EFC06-F332-6A33-F869-087BD7F9E526}|Assembly-CSharp.csproj|C:\\Users\\KGA\\Half-life2\\assets\\02.scripts\\weapon\\enemy\\enemyai.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{A31EFC06-F332-6A33-F869-087BD7F9E526}|Assembly-CSharp.csproj|solutionrelative:assets\\02.scripts\\weapon\\enemy\\enemyai.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{A31EFC06-F332-6A33-F869-087BD7F9E526}|Assembly-CSharp.csproj|C:\\Users\\KGA\\Half-life2\\assets\\02.scripts\\particlepool.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
@@ -66,13 +66,13 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 3,
+              "DocumentIndex": 1,
               "Title": "EnemyAI.cs",
               "DocumentMoniker": "C:\\Users\\KGA\\Half-life2\\Assets\\02.Scripts\\Weapon\\Enemy\\EnemyAI.cs",
               "RelativeDocumentMoniker": "Assets\\02.Scripts\\Weapon\\Enemy\\EnemyAI.cs",
               "ToolTip": "C:\\Users\\KGA\\Half-life2\\Assets\\02.Scripts\\Weapon\\Enemy\\EnemyAI.cs",
               "RelativeToolTip": "Assets\\02.Scripts\\Weapon\\Enemy\\EnemyAI.cs",
-              "ViewState": "AgIAAM4CAAAAAAAAAAAAwOkCAAAoAAAAAAAAAA==",
+              "ViewState": "AgIAALwBAAAAAAAAAAAAAK8BAAAJAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-03-03T21:20:55.252Z",
               "EditorCaption": ""
@@ -139,7 +139,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 3,
               "Title": "PlayerScriptableWeapon.cs",
               "DocumentMoniker": "C:\\Users\\KGA\\Half-life2\\Assets\\02.Scripts\\Weapon\\Player\\PlayerScriptableWeapon.cs",
               "RelativeDocumentMoniker": "Assets\\02.Scripts\\Weapon\\Player\\PlayerScriptableWeapon.cs",
@@ -152,13 +152,13 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
+              "DocumentIndex": 2,
               "Title": "PlayerMovement.cs",
               "DocumentMoniker": "C:\\Users\\KGA\\Half-life2\\Assets\\02.Scripts\\PlayerMovement.cs",
               "RelativeDocumentMoniker": "Assets\\02.Scripts\\PlayerMovement.cs",
               "ToolTip": "C:\\Users\\KGA\\Half-life2\\Assets\\02.Scripts\\PlayerMovement.cs",
               "RelativeToolTip": "Assets\\02.Scripts\\PlayerMovement.cs",
-              "ViewState": "AgIAAC0AAAAAAAAAAAAYwAwAAAASAAAAAAAAAA==",
+              "ViewState": "AgIAAHQAAAAAAAAAAAAgwAwAAAASAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-03-02T13:19:36.701Z",
               "EditorCaption": ""
@@ -171,7 +171,7 @@
               "RelativeDocumentMoniker": "Assets\\02.Scripts\\Weapon\\Player\\PlayerWeapon.cs",
               "ToolTip": "C:\\Users\\KGA\\Half-life2\\Assets\\02.Scripts\\Weapon\\Player\\PlayerWeapon.cs",
               "RelativeToolTip": "Assets\\02.Scripts\\Weapon\\Player\\PlayerWeapon.cs",
-              "ViewState": "AgIAAO0AAAAAAAAAAAAmwPUAAAAFAAAAAAAAAA==",
+              "ViewState": "AgIAAC8AAAAAAAAAAAAAAGQAAABAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-03-02T10:22:18.969Z",
               "EditorCaption": ""

@@ -14364,16 +14364,16 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   player: {fileID: 6037586200640605221}
   weaponScripts:
-  - {fileID: 11400000, guid: a64a0a3e7e2b93345a6858a889e48d6b, type: 2}
-  - {fileID: 11400000, guid: 79dd2e131f541344eb13fb180ee3a831, type: 2}
-  - {fileID: 11400000, guid: 9e702727061f7944da10e47b8bd5c5de, type: 2}
   - {fileID: 11400000, guid: eeb231fd76363f548a914be53acf684f, type: 2}
-  - {fileID: 11400000, guid: c60e4129b48ad0b4d9639d5ff01fff39, type: 2}
   - {fileID: 11400000, guid: 3e8bebe875f272346881e0ab776a0fca, type: 2}
-  - {fileID: 11400000, guid: 8b059837dcc1f3d4c8ceb450bf9ec8e3, type: 2}
-  - {fileID: 11400000, guid: 607f153c804bbdb43bc34f418592db49, type: 2}
+  - {fileID: 11400000, guid: c60e4129b48ad0b4d9639d5ff01fff39, type: 2}
   - {fileID: 11400000, guid: b56fde70c06eb2a4087835dbfa841a55, type: 2}
+  - {fileID: 11400000, guid: a64a0a3e7e2b93345a6858a889e48d6b, type: 2}
+  - {fileID: 11400000, guid: 607f153c804bbdb43bc34f418592db49, type: 2}
   - {fileID: 11400000, guid: d51771c392c030c43a439757c5968b66, type: 2}
+  - {fileID: 11400000, guid: 9e702727061f7944da10e47b8bd5c5de, type: 2}
+  - {fileID: 11400000, guid: 8b059837dcc1f3d4c8ceb450bf9ec8e3, type: 2}
+  - {fileID: 11400000, guid: 79dd2e131f541344eb13fb180ee3a831, type: 2}
   weaponPrefabs:
   - {fileID: 7643470310326899926}
   - {fileID: 6256855293659155951}

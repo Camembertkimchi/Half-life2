@@ -947,13 +947,12 @@ MonoBehaviour:
   patrolPoints: []
   patrolPointThreshold: 1
   searchTimer: 0
-  minCoverDistance: 3
-  maxCoverDistance: 10
   coverPointMask:
     serializedVersion: 2
     m_Bits: 0
   coverSearchRadius: 20
   timeInCover: 2
+  maxAttempts: 10
 --- !u!195 &353098124
 NavMeshAgent:
   m_ObjectHideFlags: 0
@@ -1332,13 +1331,12 @@ MonoBehaviour:
   patrolPoints: []
   patrolPointThreshold: 1
   searchTimer: 0
-  minCoverDistance: 3
-  maxCoverDistance: 10
   coverPointMask:
     serializedVersion: 2
     m_Bits: 0
   coverSearchRadius: 20
   timeInCover: 2
+  maxAttempts: 10
 --- !u!136 &793769011
 CapsuleCollider:
   m_ObjectHideFlags: 0
