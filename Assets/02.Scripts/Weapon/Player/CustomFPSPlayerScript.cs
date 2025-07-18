@@ -19,21 +19,21 @@ using UnityEngine.InputSystem;
 
 namespace KINEMATION.FPSAnimationPack.Scripts.Player
 {
-    [Serializable]
-    public struct IKTransforms
-    {
-        public Transform tip;
-        public Transform mid;
-        public Transform root;
-    }
-    
-    [AddComponentMenu("KINEMATION/FPS Animation Pack/Character/FPS Player")]
-    public class FPSPlayer : MonoBehaviour
+    //[Serializable]
+    //public struct IKTransforms이 부분이 주석 처리되어 있으면 오류가 발생합니다. 다시 활성화했습니다.
+    //{
+    //    public Transform tip;
+    //    public Transform mid;
+    //    public Transform root;
+    //}
+
+    [AddComponentMenu("KINEMATION/FPS Animation Pack/Character/FPS Player_Custom")]
+    public class CustomFPSPlayerScript : MonoBehaviour
     {
         public float AdsWeight => _adsWeight;
-        
+
         public FPSPlayerSettings playerSettings;
-        
+
         [Header("Skeleton")]
         [SerializeField] private Transform skeletonRoot;
         [SerializeField] private Transform weaponBone;
@@ -41,10 +41,10 @@ namespace KINEMATION.FPSAnimationPack.Scripts.Player
         [SerializeField] private Transform cameraPoint;
         [SerializeField] private IKTransforms rightHand;
         [SerializeField] private IKTransforms leftHand;
-        
+
         private KTwoBoneIkData _rightHandIk;
         private KTwoBoneIkData _leftHandIk;
-        
+
         private RecoilAnimation _recoilAnimation;
         private float _adsWeight;
 
@@ -67,16 +67,18 @@ namespace KINEMATION.FPSAnimationPack.Scripts.Player
         private int _tacSprintLayerIndex;
         private int _triggerDisciplineLayerIndex;
         private int _rightHandLayerIndex;
-        
+
         private bool _isAiming;
 
-        private Vector2 _moveInput;
-        private float _smoothGait;
+        // PlayerMovement 스크립트에서 값을 받아오기 위해 public으로 변경
+        public Vector2 _moveInput;
+        public float _smoothGait;
 
-        private Vector2 _lookInput;
+        // _lookInput은 PlayerMovement가 직접 시점 회전을 처리하므로 여기서는 필요 없음.
+        // private Vector2 _lookInput;
 
-        private bool _bSprinting;
-        private bool _bTacSprinting;
+        public bool _bSprinting;
+        public bool _bTacSprinting;
 
         private FPSPlayerSound _playerSound;
 
@@ -86,8 +88,9 @@ namespace KINEMATION.FPSAnimationPack.Scripts.Player
         private IKMotion _activeMotion;
 
         private KTransform _localCameraPoint;
-        private CharacterController _controller;
-        
+        // CharacterController는 이제 PlayerMovement에서 직접 제어하므로 여기서는 필요 없음.
+        // private CharacterController _controller;
+
         private void EquipWeapon_Incremental()
         {
             GetActiveWeapon().gameObject.SetActive(false);
@@ -138,48 +141,52 @@ namespace KINEMATION.FPSAnimationPack.Scripts.Player
                 PlayIkMotion(playerSettings.fireModeMotion);
             }
         }
-        
+
         public void OnReload()
         {
             GetActiveWeapon().OnReload();
         }
-        
+
         public void OnJump()
         {
             _animator.SetBool(IS_IN_AIR, true);
             Invoke(nameof(OnLand), 0.4f);
         }
-        
+
         public void OnInspect()
         {
             _animator.CrossFade(INSPECT, 0.1f);
         }
-        
+
 #if ENABLE_INPUT_SYSTEM
+        // Unity Input System을 사용한다면 여기에 정의된 OnLook, OnMove, OnSprint, OnTacSprint는
+        // PlayerMovement와 중복되므로 주석 처리하거나 제거해야 합니다.
+        // Legacy Input System을 사용하신다고 했으니, 이 블록은 건드리지 않으셔도 되지만
+        // 만약을 위해 관련된 함수들은 주석 처리된 상태로 두겠습니다.
         public void OnMouseWheel(InputValue value)
         {
             float mouseWheelValue = value.Get<float>();
             if (mouseWheelValue == 0f) return;
-            
+
             GetActiveWeapon().gameObject.SetActive(false);
-            
+
             _activeWeaponIndex += mouseWheelValue > 0f ? 1 : -1;
 
             if (_activeWeaponIndex < 0) _activeWeaponIndex = _weapons.Count - 1;
-            if(_activeWeaponIndex > _weapons.Count - 1) _activeWeaponIndex = 0;
-            
+            if (_activeWeaponIndex > _weapons.Count - 1) _activeWeaponIndex = 0;
+
             GetActiveWeapon().gameObject.SetActive(true);
             GetActiveWeapon().OnEquipped_Immediate();
         }
-        
+
         public void OnFire(InputValue value)
         {
-            if(value.isPressed)
+            if (value.isPressed)
             {
                 GetActiveWeapon().OnFirePressed();
                 return;
             }
-            
+
             GetActiveWeapon().OnFireReleased();
         }
 
@@ -196,6 +203,7 @@ namespace KINEMATION.FPSAnimationPack.Scripts.Player
             }
         }
 
+        /* // PlayerMovement에서 처리하므로 주석 처리
         public void OnMove(InputValue value)
         {
             _moveInput = value.Get<Vector2>();
@@ -206,7 +214,7 @@ namespace KINEMATION.FPSAnimationPack.Scripts.Player
             _bSprinting = value.isPressed;
             if(!_bSprinting) _bTacSprinting = false;
         }
-        
+
         public void OnTacSprint(InputValue value)
         {
             if (!_bSprinting) return;
@@ -215,90 +223,102 @@ namespace KINEMATION.FPSAnimationPack.Scripts.Player
 
         public void OnLook(InputValue value)
         {
-            Vector2 input = value.Get<Vector2>() * playerSettings.sensitivity;
-            _lookInput.y = Mathf.Clamp(_lookInput.y - input.y, -90f, 90f);
-            _lookInput.x = input.x;
+            // PlayerMovement에서 직접 카메라 회전을 처리하므로,
+            // FPSPlayer는 이 입력을 처리할 필요가 없습니다.
+            // Vector2 input = value.Get<Vector2>() * playerSettings.sensitivity;
+            // _lookInput.y = Mathf.Clamp(_lookInput.y - input.y, -90f, 90f);
+            // _lookInput.x = input.x;
         }
+        */
 #endif
 #if !ENABLE_INPUT_SYSTEM
-       // private void OnLookLegacy()
-       // {
-       //     Vector2 input = new Vector2()
-       //     {
-       //         x = Input.GetAxis("Horizontal"),
-       //         y = Input.GetAxis("Vertical")
-       //     };
-       //     
-       //     _lookInput.y = Mathf.Clamp(_lookInput.y + input.y, -90f, 90f);
-       //     _lookInput.x = input.x;
-       // }
-       //
-       // private void OnMouseWheelLegacy()
-       // {
-       //     float mouseWheelValue = Input.GetAxis("Mouse ScrollWheel");
-       //     if (mouseWheelValue == 0f) return;
-       //     
-       //     GetActiveWeapon().gameObject.SetActive(false);
-       //     _activeWeaponIndex += mouseWheelValue > 0f ? 1 : -1;
-       //
-       //     if (_activeWeaponIndex < 0) _activeWeaponIndex = _weapons.Count - 1;
-       //     if(_activeWeaponIndex > _weapons.Count - 1) _activeWeaponIndex = 0;
-       //     
-       //     GetActiveWeapon().gameObject.SetActive(true);
-       //     GetActiveWeapon().OnEquipped_Immediate();
-       // }
-       //
-       // private void OnAimLegacy(bool isPressed)
-       // {
-       //     bool wasAiming = _isAiming;
-       //     _isAiming = isPressed;
-       //     _recoilAnimation.isAiming = _isAiming;
-       //     
-       //     if(wasAiming != _isAiming) 
-       //     {
-       //         _playerSound.PlayAimSound(_isAiming);
-       //         PlayIkMotion(playerSettings.aimingMotion);
-       //     }
-       // }
-       // 
-       // private void OnMoveLegacy()
-       // {
-       //     _moveInput.x = Input.GetAxis("Horizontal");
-       //     _moveInput.y = Input.GetAxis("Vertical");
-       //     _moveInput.Normalize();
-       // }
-       //
-       // private void OnSprintLegacy(bool isPressed)
-       // {
-       //     _bSprinting = isPressed;
-       //     if(!_bSprinting) _bTacSprinting = false;
-       // }
-       //
-       // private void OnTacSprintLegacy(bool isPressed)
-       // {
-       //     if (!_bSprinting) return;
-       //     _bTacSprinting = isPressed;
-       // }
-       // 
-       // private void ProcessLegacyInputs()
-       // {
-       //     OnMouseWheelLegacy();
-       //     if (Input.GetKeyDown(KeyCode.G)) OnThrowGrenade();
-       //     if (Input.GetKeyDown(KeyCode.F)) OnChangeWeapon();
-       //     if (Input.GetKeyDown(KeyCode.B)) OnChangeFireMode();
-       //     if (Input.GetKeyDown(KeyCode.R)) OnReload();
-       //     if (Input.GetKeyDown(KeyCode.Space)) OnJump();
-       //     if (Input.GetKeyDown(KeyCode.I)) OnInspect();
-       //     
-       //     if (Input.GetKeyDown(KeyCode.Mouse0)) GetActiveWeapon().OnFirePressed();
-       //     if (Input.GetKeyUp(KeyCode.Mouse0)) GetActiveWeapon().OnFireReleased();
-       //
-       //     OnAimLegacy(Input.GetKey(KeyCode.Mouse1));
-       //     OnMoveLegacy();
-       //     OnLookLegacy();
-       //     OnSprintLegacy(Input.GetKey(KeyCode.LeftShift));
-       //     OnTacSprintLegacy(Input.GetKey(KeyCode.X));
-       // }
+        // Legacy Input System 사용 시 필요한 함수들 추가 (OnMouseWheelLegacy, OnAimLegacy)
+        private void OnMouseWheelLegacy()
+        {
+            float mouseWheelValue = Input.GetAxis("Mouse ScrollWheel");
+            if (mouseWheelValue == 0f) return;
+
+            GetActiveWeapon().gameObject.SetActive(false);
+
+            _activeWeaponIndex += mouseWheelValue > 0f ? 1 : -1;
+
+            if (_activeWeaponIndex < 0) _activeWeaponIndex = _weapons.Count - 1;
+            if (_activeWeaponIndex > _weapons.Count - 1) _activeWeaponIndex = 0;
+
+            GetActiveWeapon().gameObject.SetActive(true);
+            GetActiveWeapon().OnEquipped_Immediate();
+        }
+
+        private void OnAimLegacy(bool isPressed)
+        {
+            bool wasAiming = _isAiming;
+            _isAiming = isPressed;
+            _recoilAnimation.isAiming = _isAiming;
+
+            if (wasAiming != _isAiming)
+            {
+                _playerSound.PlayAimSound(_isAiming);
+                PlayIkMotion(playerSettings.aimingMotion);
+            }
+        }
+
+        // 이 함수들은 PlayerMovement가 담당하므로 완전히 주석 처리하거나 제거
+        /*
+        private void OnLookLegacy()
+        {
+            // Vector2 input = new Vector2()
+            // {
+            //    x = Input.GetAxis("Horizontal"),
+            //    y = Input.GetAxis("Vertical")
+            // };
+            //
+            // _lookInput.y = Mathf.Clamp(_lookInput.y + input.y, -90f, 90f);
+            // _lookInput.x = input.x;
+        }
+
+        private void OnMoveLegacy()
+        {
+            // _moveInput.x = Input.GetAxis("Horizontal");
+            // _moveInput.y = Input.GetAxis("Vertical");
+            // _moveInput.Normalize();
+        }
+
+        private void OnSprintLegacy(bool isPressed)
+        {
+            // _bSprinting = isPressed;
+            // if(!_bSprinting) _bTacSprinting = false;
+        }
+
+        private void OnTacSprintLegacy(bool isPressed)
+        {
+            // if (!_bSprinting) return;
+            // _bTacSprinting = isPressed;
+        }
+        */
+
+        // ProcessLegacyInputs() 함수는 유지하되, 내부의 이동/시점 로직만 주석 처리
+        private void ProcessLegacyInputs()
+        {
+            OnMouseWheelLegacy(); // FPSPlayer에서 계속 처리
+            if (Input.GetKeyDown(KeyCode.G)) OnThrowGrenade(); // FPSPlayer에서 계속 처리
+            if (Input.GetKeyDown(KeyCode.F)) OnChangeWeapon(); // FPSPlayer에서 계속 처리
+            if (Input.GetKeyDown(KeyCode.B)) OnChangeFireMode(); // FPSPlayer에서 계속 처리
+            if (Input.GetKeyDown(KeyCode.R)) OnReload(); // FPSPlayer에서 계속 처리
+            if (Input.GetKeyDown(KeyCode.Space)) OnJump(); // FPSPlayer에서 점프 애니메이션만 트리거
+            if (Input.GetKeyDown(KeyCode.I)) OnInspect(); // FPSPlayer에서 계속 처리
+
+            if (Input.GetKeyDown(KeyCode.Mouse0)) GetActiveWeapon().OnFirePressed(); // FPSPlayer에서 계속 처리
+            if (Input.GetKeyUp(KeyCode.Mouse0)) GetActiveWeapon().OnFireReleased(); // FPSPlayer에서 계속 처리
+
+            OnAimLegacy(Input.GetKey(KeyCode.Mouse1)); // FPSPlayer에서 계속 처리
+
+            // --- PlayerMovement에서 처리할 입력 로직은 여기에서 주석 처리합니다. ---
+            // OnMoveLegacy();
+            // OnLookLegacy();
+            // OnSprintLegacy(Input.GetKey(KeyCode.LeftShift));
+            // OnTacSprintLegacy(Input.GetKey(KeyCode.X));
+            // --- 여기까지 ---
+        }
 #endif
         private void SetWeaponVisible()
         {
@@ -318,64 +338,67 @@ namespace KINEMATION.FPSAnimationPack.Scripts.Player
         private void Start()
         {
             _animator = GetComponent<Animator>();
-            _controller = transform.root.GetComponent<CharacterController>();
+            // _controller = transform.root.GetComponent<CharacterController>(); // PlayerMovement가 담당하므로 주석 처리
             _recoilAnimation = GetComponent<RecoilAnimation>();
             _playerSound = GetComponent<FPSPlayerSound>();
-            
+
             _triggerDisciplineLayerIndex = _animator.GetLayerIndex("TriggerDiscipline");
             _rightHandLayerIndex = _animator.GetLayerIndex("RightHand");
             _tacSprintLayerIndex = _animator.GetLayerIndex("TacSprint");
-            
+
             KTransform root = new KTransform(transform);
             _localCameraPoint = root.GetRelativeTransform(new KTransform(cameraPoint), false);
 
             foreach (var prefab in playerSettings.weaponPrefabs)
             {
                 var prefabComponent = prefab.GetComponent<FPSWeapon>();
-                if(prefabComponent == null) continue;
-                
+                if (prefabComponent == null) continue;
+
                 _prefabComponents.Add(prefabComponent);
-                
+
                 var instance = Instantiate(prefab, weaponBone, false);
                 instance.SetActive(false);
-                
+
                 var component = instance.GetComponent<FPSWeapon>();
                 component.Initialize(gameObject);
 
                 KTransform weaponT = new KTransform(weaponBone);
                 component.rightHandPose = new KTransform(rightHand.tip).GetRelativeTransform(weaponT, false);
-                
+
                 var localWeapon = root.GetRelativeTransform(weaponT, false);
 
                 localWeapon.rotation *= ANIMATED_OFFSET;
-                
+
                 component.adsPose.position = _localCameraPoint.position - localWeapon.position;
                 component.adsPose.rotation = Quaternion.Inverse(localWeapon.rotation);
 
                 _weapons.Add(component);
             }
-            
+
             GetActiveWeapon().gameObject.SetActive(true);
             GetActiveWeapon().OnEquipped();
         }
 
+        // GetDesiredGait() 함수는 이제 PlayerMovement에서 전달받은 public 변수를 사용합니다.
         private float GetDesiredGait()
         {
             if (_bTacSprinting) return 3f;
             if (_bSprinting) return 2f;
             return _moveInput.magnitude;
         }
-        
+
         private void Update()
         {
 #if !ENABLE_INPUT_SYSTEM
-            //ProcessLegacyInputs();
-#endif 
+            // PlayerMovement에서 이동/시점 로직을 처리하므로,
+            // ProcessLegacyInputs() 내부의 해당 호출은 주석 처리된 상태입니다.
+            ProcessLegacyInputs();
+#endif
             _adsWeight = Mathf.Clamp01(_adsWeight + playerSettings.aimSpeed * Time.deltaTime * (_isAiming ? 1f : -1f));
 
-            _smoothGait = Mathf.Lerp(_smoothGait, GetDesiredGait(), 
+            _smoothGait = Mathf.Lerp(_smoothGait, GetDesiredGait(),
                 KMath.ExpDecayAlpha(playerSettings.gaitSmoothing, Time.deltaTime));
-            
+
             _animator.SetFloat(GAIT, _smoothGait);
             _animator.SetLayerWeight(_tacSprintLayerIndex, Mathf.Clamp01(_smoothGait - 2f));
 
@@ -385,27 +408,28 @@ namespace KINEMATION.FPSAnimationPack.Scripts.Player
                 triggerAllowed ? _animator.GetFloat(TAC_SPRINT_WEIGHT) : 0f);
 
             _animator.SetLayerWeight(_rightHandLayerIndex, _animator.GetFloat(RIGHT_HAND_WEIGHT));
-            
-            Vector3 cameraPosition = -_localCameraPoint.position;
-            
-            transform.localRotation = Quaternion.Euler(_lookInput.y, 0f, 0f);
-            transform.localPosition = transform.localRotation * cameraPosition - cameraPosition;
 
-            if (_controller != null)
-            {
-                Transform root = _controller.transform;
-                root.rotation *= Quaternion.Euler(0f, _lookInput.x, 0f);
-                Vector3 movement = root.forward * _moveInput.y + root.right * _moveInput.x;
-                movement *= _smoothGait * 1.5f;
-                _controller.Move(movement * Time.deltaTime);
-            }
+            // *** 중요: 아래 시점 및 이동 처리 로직 전체 주석 처리! PlayerMovement에서 제어합니다. ***
+            Vector3 cameraPosition = -_localCameraPoint.position;
+
+            // transform.localRotation = Quaternion.Euler(_lookInput.y, 0f, 0f);
+            // transform.localPosition = transform.localRotation * cameraPosition - cameraPosition;
+
+            // if (_controller != null)
+            // {
+            //     Transform root = _controller.transform;
+            //     root.rotation *= Quaternion.Euler(0f, _lookInput.x, 0f);
+            //     Vector3 movement = root.forward * _moveInput.y + root.right * _moveInput.x;
+            //     movement *= _smoothGait * 1.5f;
+            //     _controller.Move(movement * Time.deltaTime);
+            // }
         }
 
-        private void SetupIkData(ref KTwoBoneIkData ikData, in KTransform target, in IKTransforms transforms, 
+        private void SetupIkData(ref KTwoBoneIkData ikData, in KTransform target, in IKTransforms transforms,
             float weight = 1f)
         {
             ikData.target = target;
-            
+
             ikData.tip = new KTransform(transforms.tip);
             ikData.mid = ikData.hint = new KTransform(transforms.mid);
             ikData.root = new KTransform(transforms.root);
@@ -421,7 +445,7 @@ namespace KINEMATION.FPSAnimationPack.Scripts.Player
             transforms.mid.rotation = ikData.mid.rotation;
             transforms.tip.rotation = ikData.tip.rotation;
         }
-        
+
         private void ProcessOffsets(ref KTransform weaponT)
         {
             var root = transform;
@@ -430,7 +454,7 @@ namespace KINEMATION.FPSAnimationPack.Scripts.Player
 
             float mask = 1f - _animator.GetFloat(TAC_SPRINT_WEIGHT);
             weaponT.position = KAnimationMath.MoveInSpace(rootT, weaponT, weaponOffset, mask);
-            
+
             var settings = GetActiveWeapon().weaponSettings;
             KAnimationMath.MoveInSpace(root, rightHand.root, settings.rightClavicleOffset, mask);
             KAnimationMath.MoveInSpace(root, leftHand.root, settings.leftClavicleOffset, mask);
@@ -440,9 +464,9 @@ namespace KINEMATION.FPSAnimationPack.Scripts.Player
         {
             KTransform rootT = new KTransform(skeletonRoot);
             KTransform additive = rootT.GetRelativeTransform(new KTransform(weaponBoneAdditive), false);
-            
+
             float weight = Mathf.Lerp(1f, 0.3f, _adsWeight) * (1f - _animator.GetFloat(GRENADE_WEIGHT));
-            
+
             weaponT.position = KAnimationMath.MoveInSpace(rootT, weaponT, additive.position, weight);
             weaponT.rotation = KAnimationMath.RotateInSpace(rootT, weaponT, additive.rotation, weight);
         }
@@ -464,18 +488,18 @@ namespace KINEMATION.FPSAnimationPack.Scripts.Player
         {
             var weaponOffset = GetActiveWeapon().weaponSettings.ikOffset;
             var adsPose = weaponT;
-            
+
             KTransform aimPoint = KTransform.Identity;
-            
+
             aimPoint.position = -weaponBone.InverseTransformPoint(GetActiveWeapon().aimPoint.position);
             aimPoint.position -= GetActiveWeapon().weaponSettings.aimPointOffset;
             aimPoint.rotation = Quaternion.Inverse(weaponBone.rotation) * GetActiveWeapon().aimPoint.rotation;
-            
+
             KTransform root = new KTransform(transform);
             adsPose.position = KAnimationMath.MoveInSpace(root, adsPose,
                 GetActiveWeapon().adsPose.position - weaponOffset, 1f);
             adsPose.rotation =
-                KAnimationMath.RotateInSpace(root, adsPose, 
+                KAnimationMath.RotateInSpace(root, adsPose,
                     GetActiveWeapon().adsPose.rotation, 1f);
 
             KTransform cameraPose = root.GetWorldTransform(_localCameraPoint, false);
@@ -488,7 +512,7 @@ namespace KINEMATION.FPSAnimationPack.Scripts.Player
             adsPose.rotation = KAnimationMath.RotateInSpace(root, adsPose, aimPoint.rotation, 1f);
 
             float weight = KCurves.EaseSine(0f, 1f, _adsWeight);
-            
+
             weaponT.position = Vector3.Lerp(weaponT.position, adsPose.position, weight);
             weaponT.rotation = Quaternion.Slerp(weaponT.rotation, adsPose.rotation, weight);
         }
@@ -498,10 +522,10 @@ namespace KINEMATION.FPSAnimationPack.Scripts.Player
             KTransform defaultWorldPose =
                 new KTransform(rightHand.tip).GetWorldTransform(GetActiveWeapon().rightHandPose, false);
             float weight = _animator.GetFloat(RIGHT_HAND_WEIGHT);
-            
+
             return KTransform.Lerp(new KTransform(weaponBone), defaultWorldPose, weight);
         }
-        
+
         private void PlayIkMotion(IKMotion newMotion)
         {
             _ikMotionPlayBack = 0f;
@@ -512,8 +536,8 @@ namespace KINEMATION.FPSAnimationPack.Scripts.Player
         private void ProcessIkMotion(ref KTransform weaponT)
         {
             if (_activeMotion == null) return;
-            
-            _ikMotionPlayBack = Mathf.Clamp(_ikMotionPlayBack + _activeMotion.playRate * Time.deltaTime, 0f, 
+
+            _ikMotionPlayBack = Mathf.Clamp(_ikMotionPlayBack + _activeMotion.playRate * Time.deltaTime, 0f,
                 _activeMotion.GetLength());
 
             Vector3 positionTarget = _activeMotion.translationCurves.GetValue(_ikMotionPlayBack);
@@ -544,12 +568,12 @@ namespace KINEMATION.FPSAnimationPack.Scripts.Player
         {
             KAnimationMath.RotateInSpace(transform, rightHand.tip,
                 GetActiveWeapon().weaponSettings.rightHandSprintOffset, _animator.GetFloat(TAC_SPRINT_WEIGHT));
-            
+
             KTransform weaponTransform = GetWeaponPose();
-            
+
             weaponTransform.rotation = KAnimationMath.RotateInSpace(weaponTransform, weaponTransform,
                 ANIMATED_OFFSET, 1f);
-            
+
             KTransform rightHandTarget = weaponTransform.GetRelativeTransform(new KTransform(rightHand.tip), false);
             KTransform leftHandTarget = weaponTransform.GetRelativeTransform(new KTransform(leftHand.tip), false);
 
@@ -558,16 +582,16 @@ namespace KINEMATION.FPSAnimationPack.Scripts.Player
             ProcessAdditives(ref weaponTransform);
             ProcessIkMotion(ref weaponTransform);
             ProcessRecoil(ref weaponTransform);
-            
+
             weaponBone.position = weaponTransform.position;
             weaponBone.rotation = weaponTransform.rotation;
-            
+
             rightHandTarget = weaponTransform.GetWorldTransform(rightHandTarget, false);
             leftHandTarget = weaponTransform.GetWorldTransform(leftHandTarget, false);
-            
+
             SetupIkData(ref _rightHandIk, rightHandTarget, rightHand, playerSettings.ikWeight);
             SetupIkData(ref _leftHandIk, leftHandTarget, leftHand, playerSettings.ikWeight);
-            
+
             KTwoBoneIK.Solve(ref _rightHandIk);
             KTwoBoneIK.Solve(ref _leftHandIk);
 
