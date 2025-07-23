@@ -177,7 +177,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 614aa3864332bf94bbb758ca64a4cf88, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  currentState: 6
+  currentState: 7
   weapon: {fileID: 5396316586498329160}
   hp: 200
   alive: 1
@@ -203,16 +203,21 @@ MonoBehaviour:
   arFireTimes: 4
   pistolFireTimes: 5
   shotgunFireTimes: 3
-  patrolPoints: []
+  patrolPoints:
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
   patrolPointThreshold: 1
   searchTimer: 0
-  minCoverDistance: 3
-  maxCoverDistance: 10
   coverPointMask:
     serializedVersion: 2
     m_Bits: 1024
   coverSearchRadius: 20
   timeInCover: 2
+  maxAttempts: 10
 --- !u!1 &4638531257305093091
 GameObject:
   m_ObjectHideFlags: 0

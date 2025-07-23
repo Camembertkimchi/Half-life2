@@ -106,7 +106,7 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 1, y: 1, z: 1}
+  m_Size: {x: 0.5, y: 0.5, z: 0.5}
   m_Center: {x: 0, y: 0, z: 0}
 --- !u!114 &2088675446932631669
 MonoBehaviour:
@@ -121,12 +121,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   bulletSpeed: 50
-  damage: 12
+  damage: 10
   isReleased: 0
   shootedByPlayer: 1
-  fx: {fileID: 3232339408140200165, guid: e28989f60242f8749af0e23257f55545, type: 3}
   fxLifeTime: 0.8
   particlePool: {fileID: 0}
+  trailRenderer: {fileID: 1643049725135236564}
 --- !u!96 &1643049725135236564
 TrailRenderer:
   serializedVersion: 3
@@ -248,7 +248,7 @@ Rigidbody:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1400371940245250933}
   serializedVersion: 4
-  m_Mass: 1
+  m_Mass: 0.0001
   m_Drag: 0
   m_AngularDrag: 0.05
   m_CenterOfMass: {x: 0, y: 0, z: 0}
@@ -266,4 +266,4 @@ Rigidbody:
   m_IsKinematic: 1
   m_Interpolate: 0
   m_Constraints: 0
-  m_CollisionDetection: 0
+  m_CollisionDetection: 3

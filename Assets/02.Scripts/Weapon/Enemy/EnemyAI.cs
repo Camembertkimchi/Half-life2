@@ -13,10 +13,11 @@ public enum AIState
     Attack, //발포
     Search, //탐색(플레이어를 놓칠 경우)
     Reload, //장전
+    Dead, // 죽음
     Defalut //초기값
 }
 
-public class EnemyAI : MonoBehaviour
+public class EnemyAI : MonoBehaviour, IDamageable
 {
     //HideInInspector = 그냥 에디터상에서 깔끔하게 유지하기 위한 것
     //NonSerialized = 직렬화 막기, 씬 저장시 함께 저장되거나 불러와지지 않도록 할 때 사용.
@@ -102,9 +103,13 @@ public class EnemyAI : MonoBehaviour
 
     private void SetAIState(AIState newState)
     {
-        if (currentState == newState || !alive) return;
+        Debug.Log($"{newState} 상태로 진입 시도");
+        if (currentState == newState) return;
+        Debug.Log($"{newState} 첫 관문 통과");
+        if (currentState == AIState.Dead && newState != AIState.Dead) return; // 이미 죽었으면 다른 상태로 못 바꿈
         StopAllCoroutines();
         currentState = newState;
+        Debug.Log($"{newState}로 변경하겠음!");
         switch (currentState)
         {
             //!NowReloading을 붙이지 않아도 시작 부분에서 제어하는 것이 효과적!
@@ -126,6 +131,9 @@ public class EnemyAI : MonoBehaviour
                 break;
             case AIState.Reload:
                 currentAICor = StartCoroutine(ReloadRoutine());
+                break;
+            case AIState.Dead:
+                currentAICor = StartCoroutine(Dead());
                 break;
         }
         Debug.Log($"봇 상태 변경: {currentState}");
@@ -247,7 +255,6 @@ public class EnemyAI : MonoBehaviour
             }
 
             //상태 전환 조건 (EnemyAI 자체 판단)
-            //플레이어를 완전히 놓쳤을 경우 (weapon.ShouldStopFiring과 중복될 수 있으나 안전을 위해 유지)
             if (!foundPlayer)
             {
                 Debug.Log("AttackRoutine: 플레이어 놓침. Search 상태로 전환.");
@@ -736,10 +743,12 @@ public class EnemyAI : MonoBehaviour
     {
         
         hp -= damage;
-        if(hp <= 0)
+        Debug.Log($"{damage} 받음. 남은 hp {hp}");
+        if(hp <= 0 && alive)
         {
+            Debug.Log("사망");
             alive = false;
-            Die();
+            SetAIState(AIState.Dead);
         }
         //if (!foundPlayer)
         //{
@@ -747,13 +756,6 @@ public class EnemyAI : MonoBehaviour
         //    //맞으면 숨도록
         //}
     }
-
-    void Die()
-    {
-        StopAllCoroutines();
-        StartCoroutine(Dead());
-    }
-
     IEnumerator Dead()
     {
         anim.SetBool("Running", false);
